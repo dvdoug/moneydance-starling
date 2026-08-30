@@ -17,4 +17,12 @@ class ImportStatusTest {
             ImportStatus.line("Personal", AccountSyncResult(postedAdded = 2))
         )
     }
+
+    @Test
+    fun otherSideOfTransferCountsAsAdded() {
+        assertEquals(
+            "Easy Saver: added 1 transaction.",
+            ImportStatus.line("Easy Saver", AccountSyncResult(postedAdded = 1))
+        )
+    }
 }

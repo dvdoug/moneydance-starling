@@ -155,11 +155,8 @@ object SyncService {
         val total = bundle.fetched.size.coerceAtLeast(1)
         bundle.fetched.forEachIndexed { index, item ->
             if (item.error != null || item.source == null || item.txns == null) {
-                val line = item.error ?: "Error"
                 updated.add(item.mapping.withSource(item.source))
-                results.add(AccountSyncResult(error = line))
-                lines.add(if (item.source != null) "${item.source.name}: $line" else line)
-                MdNotify.log("$reason ${item.source?.name ?: item.mapping.sourceId}: $line")
+                results.add(AccountSyncResult(error = item.error ?: "Error"))
                 return@forEachIndexed
             }
             MdNotify.bar(gui, "importing ${item.source.name}", 0.55 + 0.4 * (index + 1) / total)
@@ -175,7 +172,19 @@ object SyncService {
                 if (result.error == null) named.afterSuccessfulImport(result.lastPostedDate) else named
             )
             results.add(result)
-            val line = ImportStatus.line(item.source.name, result)
+        }
+        val extras = mutableMapOf<String, Int>()
+        for (result in results) {
+            for (id in result.otherSideSourceIds) {
+                extras[id] = extras.getOrDefault(id, 0) + 1
+            }
+        }
+        bundle.fetched.forEachIndexed { index, item ->
+            val result = results[index]
+            val name = item.source?.name ?: item.mapping.sourceId
+            val extra = extras[item.mapping.sourceId] ?: 0
+            val shown = if (extra == 0) result else result.copy(postedAdded = result.postedAdded + extra)
+            val line = ImportStatus.line(name, shown)
             lines.add(line)
             MdNotify.log(line)
         }

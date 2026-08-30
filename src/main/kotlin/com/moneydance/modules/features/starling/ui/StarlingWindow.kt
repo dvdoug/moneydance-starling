@@ -46,7 +46,7 @@ class StarlingWindow(
     private val tokenField = JPasswordField()
     private val patModel = DefaultListModel<PatRow>()
     private val patList = JList(patModel)
-    private val statusArea = JTextArea(3, 40).apply {
+    private val statusArea = JTextArea(5, 40).apply {
         isEditable = false
         lineWrap = true
         wrapStyleWord = true
@@ -148,21 +148,22 @@ class StarlingWindow(
         gbc.insets = Insets(0, 0, 8, 0)
         header.add(JScrollPane(patList).apply { preferredSize = Dimension(40, 72) }, gbc)
 
-        gbc.insets = Insets(0, 0, 4, 0)
+        gbc.insets = Insets(0, 0, 0, 0)
         header.add(progress, gbc)
-
-        gbc.insets = Insets(4, 0, 0, 0)
-        header.add(JScrollPane(statusArea).apply {
-            border = BorderFactory.createEmptyBorder()
-            verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
-            preferredSize = Dimension(40, 54)
-        }, gbc)
         return header
     }
 
     private fun buildFooter(): JPanel {
         val footer = JPanel(BorderLayout())
         footer.border = BorderFactory.createEmptyBorder(4, 20, 12, 20)
+        footer.add(
+            JScrollPane(statusArea).apply {
+                border = BorderFactory.createEmptyBorder()
+                verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+                preferredSize = Dimension(40, 88)
+            },
+            BorderLayout.NORTH
+        )
         val actions = JPanel(FlowLayout(FlowLayout.LEFT, 8, 0))
         actions.add(syncButton)
         actions.add(importOnOpenBox)
@@ -173,7 +174,8 @@ class StarlingWindow(
         val buttons = JPanel(BorderLayout())
         buttons.add(actions, BorderLayout.WEST)
         buttons.add(right, BorderLayout.EAST)
-        footer.add(buttons, BorderLayout.NORTH)
+        buttons.border = BorderFactory.createEmptyBorder(8, 0, 0, 0)
+        footer.add(buttons, BorderLayout.CENTER)
         val note = JLabel(Main.THIRD_PARTY_DISCLAIMER)
         note.font = note.font.deriveFont(note.font.size2D - 1f)
         note.foreground = Color.GRAY

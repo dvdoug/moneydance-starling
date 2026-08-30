@@ -1,5 +1,9 @@
 # Changelog
 
+## 13 - 2026-08-30
+
+A current-account ↔ Space transfer is counted on both mapping rows. Import status sits under the table instead of a thin strip in the header.
+
 ## 12 - 2026-08-30
 
 Calendar dates use UK local time, not UTC. BACS credits that Starling stamps at 23:01 UTC land on the next morning in Britain.

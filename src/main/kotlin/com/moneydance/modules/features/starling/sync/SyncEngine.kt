@@ -19,8 +19,11 @@ data class AccountSyncResult(
     val pendingPromoted: Int = 0,
     val pendingPayees: List<String> = emptyList(),
     val lastPostedDate: String? = null,
-    val error: String? = null
+    val error: String? = null,
+    val otherSideSourceIds: List<String> = emptyList()
 )
+
+private data class PendingRelink(val fitId: String, val otherUuid: String, val otherSourceId: String)
 
 class SyncEngine(
     private val book: AccountBook,
@@ -48,7 +51,7 @@ class SyncEngine(
         pruneStaleDownloads(mdAccount, known)
         val mappedIds = mappings.filter { it.moneydanceAccountUuid.isNotBlank() }.map { it.sourceId }.toSet()
         val mappingBySource = mappings.associateBy { it.sourceId }
-        val relinks = mutableListOf<Pair<String, String>>()
+        val relinks = mutableListOf<PendingRelink>()
         val pendingLf = txns.filter { it.isPending }
         val postedLf = txns.filter { !it.isPending && it.id.isNotBlank() }
 
@@ -147,7 +150,8 @@ class SyncEngine(
             pendingUpdated = pendingUpdated,
             pendingRemoved = pendingRemoved,
             pendingPromoted = pendingPromoted,
-            lastPostedDate = latestPosted
+            lastPostedDate = latestPosted,
+            otherSideSourceIds = relinks.map { it.otherSourceId }
         )
     }
 
@@ -163,12 +167,14 @@ class SyncEngine(
         sources: List<MappableSource>,
         mappedIds: Set<String>,
         mappingBySource: Map<String, AccountMapping>,
-        relinks: MutableList<Pair<String, String>>
+        relinks: MutableList<PendingRelink>
     ): Boolean {
         val other = TxnRouter.transferCounterpart(txn, source, sources, mappedIds)
         val otherUuid = other?.let { mappingBySource[it.id]?.moneydanceAccountUuid }?.takeIf { it.isNotBlank() }
         val otherAccount = otherUuid?.let { book.getAccountByUUID(it) }
-        if (otherAccount != null && !MdAccess.sameAccount(mdAccount, otherAccount)) {
+        if (other != null && otherUuid != null && otherAccount != null &&
+            !MdAccess.sameAccount(mdAccount, otherAccount)
+        ) {
             val dateInt = isoToDateInt(txn.date)
             val amount = MdAccess.toMinorUnits(mdAccount, txn.amount)
             val existing = MdAccess.findUniqueTransfer(book, mdAccount, otherAccount, dateInt, amount)
@@ -178,7 +184,7 @@ class SyncEngine(
                 return false
             }
             addDownloadTxn(mdAccount, txn, fitId, pending)
-            if (otherUuid != null) relinks.add(fitId to otherUuid)
+            relinks.add(PendingRelink(fitId, otherUuid, other.id))
             return true
         }
         addDownloadTxn(mdAccount, txn, fitId, pending)
@@ -189,21 +195,21 @@ class SyncEngine(
      * [processDownloaded] queues Moneydance's auto-add on the EDT. Relink after that
      * so the Confirm row is already in the register, then point its split at the Space.
      */
-    private fun scheduleRelinks(mdAccount: Account, relinks: List<Pair<String, String>>) {
+    private fun scheduleRelinks(mdAccount: Account, relinks: List<PendingRelink>) {
         if (relinks.isEmpty()) return
         SwingUtilities.invokeLater {
             SwingUtilities.invokeLater {
-                for ((fitId, uuid) in relinks) {
-                    val parent = MdAccess.findByFitId(book, mdAccount, FitIds.PROTOCOL, fitId)
-                    val other = book.getAccountByUUID(uuid)
+                for (link in relinks) {
+                    val parent = MdAccess.findByFitId(book, mdAccount, FitIds.PROTOCOL, link.fitId)
+                    val other = book.getAccountByUUID(link.otherUuid)
                     if (parent == null || other == null) {
-                        MdNotify.log("could not link $fitId (download missing or account gone)")
+                        MdNotify.log("could not link ${link.fitId} (download missing or account gone)")
                         continue
                     }
                     if (MdAccess.relinkUnconfirmedSplit(parent, other)) {
-                        MdNotify.log("linked $fitId -> ${MdAccess.fullAccountName(other)}")
+                        MdNotify.log("linked ${link.fitId} -> ${MdAccess.fullAccountName(other)}")
                     } else {
-                        MdNotify.log("left $fitId as downloaded; Confirm as a transfer to ${MdAccess.fullAccountName(other)}")
+                        MdNotify.log("left ${link.fitId} as downloaded; Confirm as a transfer to ${MdAccess.fullAccountName(other)}")
                     }
                 }
             }
