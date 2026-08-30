@@ -30,16 +30,17 @@ Old rows stay put. New Imports follow the new mapping.
 
 ## A transfer into a Space does not show as coming from the current account
 
-Starling lists the same movement twice: money leaving the current account, and a credit on the Space (payee often your name). This extension imports **only the current-account row**. Confirm or Merge that as a transfer to the Space, matching your existing “Set aside money…” lines.
+Starling lists the same movement twice. This extension turns that into **one** Moneydance transfer: money leaves the current account and arrives on the Space. Both registers should show the same row.
 
-If an older import already put a standalone credit on the Space:
+If an older import left a current-account row with nothing on the Space, or a standalone credit on the Space (payee often your name):
 
-1. Install the current extension so Import will not recreate those Space-side rows.
-2. Delete the extra Space rows — unconfirmed (blue-dot) downloads, or the confirmed standalone credit if you already accepted it.
-3. Keep the original transfer that already links the current account to the Space.
-4. On the current account, Merge any extra blue-dot downloads into those existing transfers. Do not Confirm them as new.
+1. Install the current extension.
+2. Delete leftover Space-side standalone credits (blue-dot or already accepted).
+3. Keep original transfers that already link the two accounts (your “Set aside money…” lines).
+4. For a current-account row that is **not** already a transfer, either delete the unconfirmed download and Import again, or open it and set **Category** to the Space account (that is how Moneydance links the other side).
+5. Import again. Matching existing transfers are tagged, not duplicated.
 
-You do not need a FITID cleanup script unless those standalone credits were merged into *other* existing transactions.
+You do not need a FITID cleanup script unless a standalone credit was merged into a *different* existing transaction.
 
 ## Wrong register or currency
 

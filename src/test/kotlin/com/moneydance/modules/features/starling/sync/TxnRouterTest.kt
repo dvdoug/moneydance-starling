@@ -92,6 +92,45 @@ class TxnRouterTest {
     }
 
     @Test
+    fun transferCounterpartIsMappedSpace() {
+        val txn = move("ON_US_PAY_ME", "hol")
+        assertEquals(
+            holiday,
+            TxnRouter.transferCounterpart(txn, current, all, setOf(current.id, easy.id, holiday.id))
+        )
+    }
+
+    @Test
+    fun transferCounterpartFoldsUnmappedSavingsToParent() {
+        val txn = move("ON_US_PAY_ME", "hol")
+        assertEquals(easy, TxnRouter.transferCounterpart(txn, current, all, setOf(current.id, easy.id)))
+    }
+
+    @Test
+    fun transferCounterpartNullIfSavingsUnmapped() {
+        val txn = move("ON_US_PAY_ME", "hol")
+        assertNull(TxnRouter.transferCounterpart(txn, current, all, setOf(current.id)))
+    }
+
+    @Test
+    fun spendingSpaceInternalSkippedWhenParentMapped() {
+        val inn = BankTxn(
+            "1", "bills", 100.0, "GBP", "2026-01-01", "Current", "Transfer",
+            false, "INTERNAL_TRANSFER", "CATEGORY", "main", "IN"
+        )
+        assertNull(TxnRouter.destination(inn, bills, all, setOf(current.id, bills.id)))
+    }
+
+    @Test
+    fun spendingSpaceInternalKeptIfParentUnmapped() {
+        val inn = BankTxn(
+            "1", "bills", 100.0, "GBP", "2026-01-01", "Current", "Transfer",
+            false, "INTERNAL_TRANSFER", "CATEGORY", "main", "IN"
+        )
+        assertEquals(bills, TxnRouter.destination(inn, bills, all, setOf(bills.id)))
+    }
+
+    @Test
     fun shouldFetchUnmappedSpaceWhenParentMapped() {
         assertTrue(TxnRouter.shouldFetch(holiday, all, setOf(easy.id)))
         assertFalse(TxnRouter.shouldFetch(holiday, all, setOf(current.id)))

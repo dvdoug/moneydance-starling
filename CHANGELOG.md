@@ -1,5 +1,9 @@
 # Changelog
 
+## 8 - 2026-08-30
+
+Money moved between a mapped current account and a mapped Space is one Moneydance transfer, visible on both registers. If a matching transfer already exists, Import tags it instead of adding a second row.
+
 ## 7 - 2026-08-30
 
 Do not import the Space-side of a transfer when the current account is mapped. Confirm the current-account row as a transfer instead.

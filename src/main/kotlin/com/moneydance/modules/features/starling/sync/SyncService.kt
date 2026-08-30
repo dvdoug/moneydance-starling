@@ -163,7 +163,13 @@ object SyncService {
                 return@forEachIndexed
             }
             MdNotify.bar(gui, "importing ${item.source.name}", 0.55 + 0.4 * (index + 1) / total)
-            val result = engine.apply(item.mapping, item.source, item.txns)
+            val result = engine.apply(
+                item.mapping,
+                item.source,
+                item.txns,
+                bundle.sources,
+                bundle.fetched.map { it.mapping }
+            )
             val named = item.mapping.withSource(item.source)
             updated.add(
                 if (result.error == null) named.afterSuccessfulImport(result.lastPostedDate) else named

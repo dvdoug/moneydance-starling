@@ -227,6 +227,8 @@ object TxnRouter {
 
         if (feed.kind == SourceKind.SPENDING) {
             if (isInternalMove(txn)) {
+                // Parent current account already records this as a transfer when it is mapped.
+                if (parentMapped) return null
                 return if (feedMapped) feed else null
             }
             return when {
@@ -239,6 +241,28 @@ object TxnRouter {
         // Savings Space: own mapping, else parent savings account catch-all, else skip.
         if (feedMapped) return feed
         return if (parentMapped) parentMain else null
+    }
+
+    /**
+     * The mapped Starling source that should be the **other split** of a Moneydance transfer
+     * when [feed] is a MAIN account. Null means this row is not a linked transfer.
+     */
+    fun transferCounterpart(
+        txn: BankTxn,
+        feed: MappableSource,
+        sources: List<MappableSource>,
+        mappedIds: Set<String>
+    ): MappableSource? {
+        if (feed.kind != SourceKind.MAIN) return null
+        if (!isInternalMove(txn)) return null
+        val byCat = sources.associateBy { it.categoryUid }
+        val other = txn.counterPartyUid?.let { byCat[it] } ?: return null
+        if (other.id in mappedIds) return other
+        if (other.kind == SourceKind.SAVINGS) {
+            val parent = sources.firstOrNull { it.accountUid == other.accountUid && it.kind == SourceKind.MAIN }
+            if (parent != null && parent.id in mappedIds) return parent
+        }
+        return null
     }
 
     private fun isOnUsFromCustomer(txn: BankTxn): Boolean {

@@ -4,11 +4,15 @@ import com.infinitekind.moneydance.model.Account;
 import com.infinitekind.moneydance.model.AccountBook;
 import com.infinitekind.moneydance.model.AbstractTxn;
 import com.infinitekind.moneydance.model.CurrencyType;
+import com.infinitekind.moneydance.model.CurrencyUtil;
 import com.infinitekind.moneydance.model.OnlineTxn;
 import com.infinitekind.moneydance.model.OnlineTxnList;
 import com.infinitekind.moneydance.model.ParentTxn;
+import com.infinitekind.moneydance.model.SplitTxn;
 import com.infinitekind.moneydance.model.TransactionSet;
 import com.infinitekind.moneydance.model.TxnSet;
+import com.infinitekind.moneydance.model.TxnUtil;
+import com.infinitekind.util.DateUtil;
 
 /** Java facades for Kotlin-private properties that still have public getters on the bytecode. */
 public final class MdAccess {
@@ -298,5 +302,94 @@ public final class MdAccess {
     public static void setRegisterFitId(ParentTxn txn, String fitId) {
         txn.setFiTxnId(OnlineTxn.PROTO_TYPE_OFX, fitId);
         txn.syncItem();
+    }
+
+    /**
+     * Existing transfer from {@code fromAccount} to {@code toAccount} with this date and amount,
+     * or null if none or more than one.
+     */
+    public static ParentTxn findUniqueTransfer(
+        AccountBook book,
+        Account fromAccount,
+        Account toAccount,
+        int dateInt,
+        long amount
+    ) {
+        ParentTxn found = null;
+        for (AbstractTxn txn : book.getTransactionSet().getTransactionsForAccount(fromAccount)) {
+            if (!(txn instanceof ParentTxn)) {
+                continue;
+            }
+            ParentTxn parent = (ParentTxn) txn;
+            if (!sameAccount(parent.getAccount(), fromAccount)) {
+                continue;
+            }
+            if (!parent.isTransferTo(toAccount)) {
+                continue;
+            }
+            if (parent.getDateInt() != dateInt || parent.getValue() != amount) {
+                continue;
+            }
+            if (found != null) {
+                return null;
+            }
+            found = parent;
+        }
+        return found;
+    }
+
+    /**
+     * One Moneydance transfer: parent on {@code fromAccount}, split on {@code toAccount}.
+     * Both registers show the same transaction.
+     */
+    public static ParentTxn addTransfer(
+        AccountBook book,
+        Account fromAccount,
+        Account toAccount,
+        int dateInt,
+        long amount,
+        String description,
+        String memo,
+        String fitId,
+        boolean pending
+    ) {
+        String desc = description == null ? "" : description;
+        String note = memo == null ? "" : memo;
+        ParentTxn parent = ParentTxn.makeParentTxn(
+            book,
+            dateInt,
+            dateInt,
+            DateUtil.getUniqueCurrentTimeMillis(),
+            "",
+            fromAccount,
+            desc,
+            note,
+            -1L,
+            AbstractTxn.STATUS_UNRECONCILED
+        );
+        double rate = CurrencyUtil.getRawRate(
+            fromAccount.getCurrencyType(),
+            toAccount.getCurrencyType(),
+            dateInt
+        );
+        SplitTxn split = SplitTxn.makeSplitTxn(
+            parent,
+            amount,
+            rate,
+            toAccount,
+            desc,
+            -1L,
+            AbstractTxn.STATUS_UNRECONCILED
+        );
+        parent.addSplit(split);
+        parent.setFiTxnId(OnlineTxn.PROTO_TYPE_OFX, fitId);
+        parent.setIsNew(true);
+        parent.setTransferType(AbstractTxn.TRANSFER_TYPE_BANK);
+        if (pending) {
+            parent.setParameter("starling.pending", true);
+        }
+        TxnUtil.setRatesInTxn(parent);
+        parent.syncItem();
+        return parent;
     }
 }

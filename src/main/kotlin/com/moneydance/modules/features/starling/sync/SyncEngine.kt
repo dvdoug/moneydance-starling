@@ -28,7 +28,9 @@ class SyncEngine(
     fun apply(
         mapping: AccountMapping,
         source: MappableSource,
-        txns: List<BankTxn>
+        txns: List<BankTxn>,
+        sources: List<MappableSource> = emptyList(),
+        mappings: List<AccountMapping> = emptyList()
     ): AccountSyncResult {
         val mdAccount = book.getAccountByUUID(mapping.moneydanceAccountUuid)
             ?: return AccountSyncResult(error = "Mapped Moneydance account is missing.")
@@ -42,6 +44,8 @@ class SyncEngine(
 
         val known = collectRegisterFitIds(mdAccount)
         pruneStaleDownloads(mdAccount, known)
+        val mappedIds = mappings.filter { it.moneydanceAccountUuid.isNotBlank() }.map { it.sourceId }.toSet()
+        val mappingBySource = mappings.associateBy { it.sourceId }
         val pendingLf = txns.filter { it.isPending }
         val postedLf = txns.filter { !it.isPending && it.id.isNotBlank() }
 
@@ -97,9 +101,12 @@ class SyncEngine(
                 latestPosted = maxDate(latestPosted, txn.date)
                 continue
             }
-            addDownloadTxn(mdAccount, txn, fitId, pending = false)
+            if (addPostedOrTransfer(mdAccount, source, txn, fitId, pending = false, sources, mappedIds, mappingBySource)) {
+                postedAdded++
+            } else {
+                postedSkipped++
+            }
             known.add(fitId)
-            postedAdded++
             latestPosted = maxDate(latestPosted, txn.date)
         }
 
@@ -114,7 +121,7 @@ class SyncEngine(
                 }
                 pendingUpdated++
             } else {
-                addDownloadTxn(mdAccount, txn, key, pending = true)
+                addPostedOrTransfer(mdAccount, source, txn, key, pending = true, sources, mappedIds, mappingBySource)
                 known.add(key)
                 pendingAdded++
             }
@@ -126,6 +133,7 @@ class SyncEngine(
             pendingRemoved++
         }
 
+        pruneStaleDownloads(mdAccount, known)
         finishDownloads(mdAccount)
 
         return AccountSyncResult(
@@ -137,6 +145,48 @@ class SyncEngine(
             pendingPromoted = pendingPromoted,
             lastPostedDate = latestPosted
         )
+    }
+
+    /**
+     * @return true if a new row was created, false if an existing transfer was tagged with this FITID.
+     */
+    private fun addPostedOrTransfer(
+        mdAccount: Account,
+        source: MappableSource,
+        txn: BankTxn,
+        fitId: String,
+        pending: Boolean,
+        sources: List<MappableSource>,
+        mappedIds: Set<String>,
+        mappingBySource: Map<String, AccountMapping>
+    ): Boolean {
+        val other = TxnRouter.transferCounterpart(txn, source, sources, mappedIds)
+        val otherUuid = other?.let { mappingBySource[it.id]?.moneydanceAccountUuid }?.takeIf { it.isNotBlank() }
+        val otherAccount = otherUuid?.let { book.getAccountByUUID(it) }
+        if (otherAccount != null && !MdAccess.sameAccount(mdAccount, otherAccount)) {
+            val dateInt = isoToDateInt(txn.date)
+            val amount = MdAccess.toMinorUnits(mdAccount, txn.amount)
+            val existing = MdAccess.findUniqueTransfer(book, mdAccount, otherAccount, dateInt, amount)
+            if (existing != null) {
+                MdAccess.setRegisterFitId(existing, fitId)
+                return false
+            }
+            val payee = if (pending) FitIds.PENDING_LABEL + txn.payee() else txn.payee()
+            MdAccess.addTransfer(
+                book,
+                mdAccount,
+                otherAccount,
+                dateInt,
+                amount,
+                payee,
+                txn.memo(),
+                fitId,
+                pending
+            )
+            return true
+        }
+        addDownloadTxn(mdAccount, txn, fitId, pending)
+        return true
     }
 
     private fun addDownloadTxn(account: Account, txn: BankTxn, fitId: String, pending: Boolean) {

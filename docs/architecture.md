@@ -66,7 +66,7 @@ Store non-secrets in `AccountBook` local storage under `starling.*`. Store each 
 
 ## Decision: import through downloaded transactions
 
-Write `OnlineTxn`s into `account.getDownloadedTxns()`, then call **`MoneydanceGUI.showDownloadedTxns(account)`** so Moneydance’s own `OnlineTxnMerger` creates unconfirmed register rows (`ol.orig-txn`, Confirm, Merge Choices). That is the OFX path. Do not create `ParentTxn`s ourselves.
+Write `OnlineTxn`s into `account.getDownloadedTxns()`, then call **`MoneydanceGUI.showDownloadedTxns(account)`** so Moneydance’s own `OnlineTxnMerger` creates unconfirmed register rows (`ol.orig-txn`, Confirm, Merge Choices). That is the OFX path for merchants. Mapped current-account ↔ Space movements are one `ParentTxn` with a split on the other bank account — the converter only splits downloads to income/expense categories.
 
 - **Confirm** = standalone register txn. **Merge** = combine with an existing row. Merge copies **FITID** onto the survivor; next sync skips it. Delete without confirm → it comes back.
 - Merge into a reminder keeps the **reminder’s description**. The downloaded `[PENDING]` name is discarded. A later settled download is a second merge (reminder name still wins).
@@ -103,6 +103,7 @@ Currency: if Starling `currency` differs from the Moneydance account’s `Curren
 - **Main feed, `INTERNAL_TRANSFER` / `ON_US_PAY_ME` + `CATEGORY`:** if the other category is a **Spending Space on the same account** and that Space is not mapped, skip (CSV-like). Otherwise keep on the main mapping (a savings account and old savings Spaces actually leave the current account).
 - **Spending Space feed:** if mapped, merchants and internals go there; if not, merchants go to the parent mapping and internals are skipped.
 - **Savings Space feed:** skip `ON_US_PAY_ME` + `CUSTOMER` when **another** Starling account MAIN is mapped — that is the other leg of the current-account transfer (holder uid, not a category). Same rule for joint and business current accounts. Interest and spending on the Space still import. Unmapped Spaces fold into the mapped savings account if any.
+- **Linked transfer:** when both sides are mapped, import **one** `ParentTxn` on the current-account mapping with a split on the Space mapping. OFX `OnlineTxn`s cannot do this (the converter only splits to income/expense). A unique existing transfer (date, amount, other account) gets the FITID instead of a second row.
 
 Catalogue: first PAT save walks the main category from `createdAt` in 180-day chunks and records every `CATEGORY` counterparty. Refresh merges live `/spaces` onto that list. Live miss → **(archived)**.
 
