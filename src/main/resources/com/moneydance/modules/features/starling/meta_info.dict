@@ -1,8 +1,8 @@
 {
   "vendor" = "Doug Wright"
   "module_name" = "Starling Bank"
-  "module_desc" = "Import Starling Bank transactions into Moneydance using a personal access token. Unofficial. Not affiliated with Starling Bank or The Infinite Kind."
+  "module_desc" = "Import Starling Bank accounts and Spaces into Moneydance. Your computer talks only to Starling — no aggregator. Unofficial. Not affiliated with Starling Bank or The Infinite Kind."
   "id" = "starling"
-  "module_build" = "14"
+  "module_build" = "15"
   "minbuild" = "5100"
 }

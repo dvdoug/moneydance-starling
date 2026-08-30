@@ -1,5 +1,9 @@
 # Changelog
 
+## 15 - 2026-08-31
+
+Setup guide matches the Developer Portal (new account, then Connect accounts). Listing copy: Spaces, and no aggregator.
+
 ## 14 - 2026-08-30
 
 Pending holds keep the merchant for category matching; Confirm no longer freezes them. Lookback is last posted minus 7 days, or the oldest open hold. Extension icon is Starling’s site mark.

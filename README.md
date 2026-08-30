@@ -1,16 +1,16 @@
 # Starling Bank for Moneydance
 
-An **unofficial** Moneydance extension by **Doug Wright**. It imports transactions from [Starling Bank](https://www.starlingbank.com/) into Moneydance using Starling’s personal API — the same job as downloading a CSV, without the monthly fee of an aggregator.
+An **unofficial** Moneydance extension by **Doug Wright**. It imports [Starling Bank](https://www.starlingbank.com/) accounts and **Spaces** (spending and savings) into Moneydance using Starling’s personal API — the same job as downloading a CSV.
 
-**This is not a Starling Bank product.** The author is not affiliated with Starling Bank or The Infinite Kind (makers of Moneydance). You need your own Starling account and a personal access token from the [Developer Portal](https://developer.starlingbank.com/).
+**This is not a Starling Bank product.** The author is not affiliated with Starling Bank or The Infinite Kind (makers of Moneydance). You need your own Starling account and a personal access token from the [Developer Portal](https://developer.starlingbank.com/) (a **separate** login from the banking app).
 
 ```text
-Your Starling account  →  Starling personal API  →  this extension  →  Moneydance
+Your Starling account  →  Starling personal API  →  this extension  →  Moneydance on this computer
 ```
 
-The extension never sends payments. It only reads accounts, Spaces, and transactions you already own.
+There is **no third-party aggregator**. The token stays in your Moneydance file. Outbound traffic is read-only requests to Starling. The extension never sends payments.
 
-For other banks (Amex, and so on) use the sibling [Lunch Flow extension](https://github.com/dvdoug/moneydance-lunchflow).
+For other banks (Amex, and so on) use the sibling [Lunch Flow extension](https://github.com/dvdoug/moneydance-lunchflow), which does go through Lunch Flow.
 
 ## Install and use
 

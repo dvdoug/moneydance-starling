@@ -1,5 +1,9 @@
 # If something looks wrong
 
+## The Developer Portal will not accept my Starling app login
+
+That is expected. The [Developer Portal](https://developer.starlingbank.com/) is a **new** account. After you sign up, use **Connect accounts** to link your existing bank account. See [setup](setup.md).
+
 ## Add token says a permission is missing
 
 The message names the missing ticks (for example `space:read`). You **cannot** add boxes to that token. Create a **new** token with every required box in [setup](setup.md), then **Add token** again.

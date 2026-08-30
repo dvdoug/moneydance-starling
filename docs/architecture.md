@@ -120,7 +120,7 @@ Amount sign: Starling `minorUnits` are unsigned; `direction` `OUT` → negative 
 
 ## HTTP client
 
-`HttpURLConnection`. JSON via `api/Json.kt`, not Jackson. ~220 ms between requests. User-Agent `moneydance-starling/1`. Treat 401 as bad token, 403 as missing scope (`ScopeCheck` parses `insufficient_scope`), 429 as rate limit.
+`HttpURLConnection`. JSON via `api/Json.kt`, not Jackson. ~400 ms between requests; honour `Retry-After` on 429. User-Agent `moneydance-starling/1`. Treat 401 as bad token, 403 as missing scope (`ScopeCheck` parses `insufficient_scope`), 429 as rate limit.
 
 ## Threading
 

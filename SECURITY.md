@@ -16,8 +16,8 @@ If a token leaks: the user revokes it in the Developer Portal and creates a new 
 
 - Send payments, create payees, or store Starling login passwords. Access is read-only via a PAT the user created.
 - Ship any Starling secret inside the `.mxt` (the MXT is a zip).
-- Send Moneydance data *to* Starling or anywhere else. Outbound traffic is GET requests to `https://api.starlingbank.com/api/v2` only.
-- Delete Moneydance transactions we did not create. Pending cleanup only deletes **unconfirmed** `ParentTxn`s we tagged (`starling:pending:…`, `isNew`). Never delete a confirmed register row. Never follow a split onto another account’s parent.
+- Send Moneydance data *to* Starling or anywhere else. Outbound traffic is GET requests to `https://api.starlingbank.com/api/v2` only. No aggregator.
+- Delete Moneydance transactions we did not create. Pending cleanup only deletes parents we tagged `starling:pending:`. Never delete reminder or typed rows, or posted `starling:` FITIDs. Never follow a split onto another account’s parent.
 
 ## Signing
 

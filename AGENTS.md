@@ -4,7 +4,7 @@ Instructions for AI coding agents working in this repository. Humans should star
 
 ## Current state (read this first)
 
-Shipped as **`module_build` 14** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.md](CHANGELOG.md) must stay in lockstep). First public build of the Starling importer.
+Shipped as **`module_build` 15** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.md](CHANGELOG.md) must stay in lockstep). First public build of the Starling importer.
 
 **Import path (do not regress):** write `OnlineTxn`s onto `account.getDownloadedTxns()`, then `MoneydanceGUI.showDownloadedTxns(account)` (`OnlineManager.processDownloadedTxns`). That is Moneydance’s OFX Confirm / Merge path (`ol.orig-txn`, blue dots). **Do not create `ParentTxn`s.** Staging is always `OnlineTxn` + `showDownloadedTxns` (Moneydance auto-adds on the EDT). After that auto-add, for a mapped current-account ↔ Space movement, retarget the unconfirmed split to the other mapped bank account so both registers show one transfer. If a unique existing transfer matches date, amount, and other account, tag its FITID instead of adding a row. Space-side `ON_US_PAY_ME` + `CUSTOMER` is skipped when the other Starling account MAIN is mapped. Do not special-case the name “Personal”; joint and business current accounts use the same MAIN + counterpart rule.
 
@@ -21,7 +21,7 @@ Shipped as **`module_build` 14** (`Version.kt`, `meta_info.dict`, and [CHANGELOG
 - Routing: unmapped **Spending Space** (same Starling account) — skip `INTERNAL_TRANSFER` on the parent; merchants from that Space land on the parent. Unmapped **savings Space** — fold into the mapped savings **account** if that account is mapped; else skip the Space feed. Current-account `ON_US_PAY_ME` to a mapped Space becomes a Moneydance transfer to that mapping (or to the savings-account catch-all if the Space is unmapped). Space-side of that move is `ON_US_PAY_ME` + `CUSTOMER` (holder uid, not a category) — skip it when **any other** Starling account MAIN is mapped. Mapping table groups account then indented children. Do not infer leftover Spaces from names. FITID uses the **feed** category uid even when folding onto a parent mapping.
 - Feed window: `transactions-between` max ~180 days (`QUERY_EXCEEDING_MAX_TIME_RANGE`). Chunk. PAT rate limit 5 rps / 1000 per day.
 - `meta_info.dict` must include `"minbuild" = "5100"` (Moneydance 2024). Missing `minbuild` → **Extension version too old**.
-- `module_desc`: unofficial Starling import via PAT; unaffiliated disclaimer. Do not imply this is a Starling or Infinite Kind product.
+- `module_desc`: unofficial Starling import of accounts and Spaces; talks only to Starling, no aggregator; unaffiliated disclaimer. Do not imply this is a Starling or Infinite Kind product.
 
 **Do not do next unless asked**
 

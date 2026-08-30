@@ -7,7 +7,7 @@ Moneydance can download transactions automatically in two official ways:
 1. **OFX Direct Connect** — free, but many banks have dropped it.
 2. **Moneydance+** — Plaid aggregator, optional subscription, **US and Canada only**.
 
-The sibling [Lunch Flow extension](https://github.com/dvdoug/moneydance-lunchflow) covers UK/EU aggregators (Amex and similar) for a monthly fee. **Starling Bank** already gives account holders a **free personal API**. Paying Lunch Flow to pull Starling is unnecessary.
+The sibling [Lunch Flow extension](https://github.com/dvdoug/moneydance-lunchflow) covers UK/EU aggregators (Amex and similar) for a monthly fee. **Starling Bank** already gives account holders a **free personal API**, including Spaces. This extension talks **only** to Starling from the user’s computer. Paying Lunch Flow to pull Starling is unnecessary.
 
 ## Goal
 
@@ -28,7 +28,7 @@ Ship an unofficial Moneydance extension, authored by **Doug Wright**, that is **
 ## User journey
 
 1. User has Moneydance and a Starling current account (and optionally Easy Saver, joint, business).
-2. In the [Starling Developer Portal](https://developer.starlingbank.com/): link the bank account, create a PAT with the scopes in [user/setup.md](user/setup.md). Treat the token like a password. Starling cannot add ticks to an existing token — missed scopes means a **new** token.
+2. In the [Starling Developer Portal](https://developer.starlingbank.com/) (a **new** account, not the banking-app login): **Connect accounts**, then create a PAT with the scopes in [user/setup.md](user/setup.md). Treat the token like a password. Starling cannot add ticks to an existing token — missed scopes means a **new** token.
 3. In Moneydance: install the extension, open **Extensions → Starling Bank**.
 4. Paste token → **Add token**. On success we **validate scopes**, then walk history once (**Validating…**) so archived Spaces appear in the table.
 5. Map each Starling row to a Moneydance **bank** account (including subaccounts you already created). Choose **— not mapped —** to skip that Space. Default for the current account is statement-shaped: Spending Space merchants land on the parent; Easy Saver is a **different** Starling account, so money sent there still leaves the current account unless that Space is mapped.

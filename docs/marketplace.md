@@ -27,7 +27,7 @@ There is no fully self-serve developer console. Path:
 1. Build and dogfood a stable `.mxt`.
 2. Post in [Extension Development](https://infinitekind.tenderapp.com/discussions/moneydance-development) and/or contact Infinite Kind.
 3. Send the unsigned (or locally signed) package plus source. They counter-sign.
-4. Listing copy should match `meta_info.dict` `module_desc`: unofficial Starling import via personal access token. Vendor **Doug Wright**. Always include the unaffiliated disclaimer.
+4. Listing copy should match `meta_info.dict` `module_desc`: unofficial Starling import of accounts and Spaces; talks only to Starling. Vendor **Doug Wright**. Always include the unaffiliated disclaimer.
 
 Useful links:
 

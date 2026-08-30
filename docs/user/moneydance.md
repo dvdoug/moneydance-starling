@@ -26,6 +26,8 @@ A joint or business Starling needs its **own** token (same ticks as [setup](setu
 
 ## Map accounts
 
+Spending Spaces, savings Spaces, and Easy Saver nested Spaces all appear in the table. Map each row you want in Moneydance; leave the rest **— not mapped —**. The extension does not create accounts.
+
 The table has **Starling account**, **Import into**, and **From**. Default **Import into** is **— not mapped —**.
 
 - **Current account** — map this if you want the register to match the main Starling feed (cards, salary, bills). Joint and business current accounts work the same way.

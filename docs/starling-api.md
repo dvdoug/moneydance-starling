@@ -6,8 +6,8 @@ Do not call Payment Services, Open Banking TPP, or write/payment endpoints.
 
 ## Setup the user must do
 
-1. Starling Developer Portal → link the bank account to the developer login.
-2. Create a personal access token. Tick the scopes in [user/setup.md](user/setup.md). Starling cannot add scopes to an existing token.
+1. Create a **Developer Portal** account (not the banking-app login). **Connect accounts** to link the existing Starling customer account.
+2. Create a personal access token. Tick the scopes in [user/setup.md](user/setup.md). Starling cannot add scopes to an existing token. The token does not expire.
 3. Paste the token into Moneydance (**Add token**). We probe the endpoints and name any missing scopes.
 
 Joint / business / sole trader is a **separate** PAT (separate account holder). Same ticks.
@@ -23,7 +23,7 @@ Authorization: Bearer <personal access token>
 Accept: application/json
 ```
 
-**Limits:** 5 requests per second, 1000 per day. We sleep ~220 ms between calls.
+**Limits:** 5 requests per second, 1000 per day. We sleep ~400 ms between calls and honour `Retry-After` on 429.
 
 ### `GET /accounts`
 

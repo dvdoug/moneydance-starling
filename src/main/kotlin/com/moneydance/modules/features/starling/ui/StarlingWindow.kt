@@ -117,7 +117,7 @@ class StarlingWindow(
         header.add(title, gbc)
 
         gbc.insets = Insets(0, 0, 4, 0)
-        header.add(JLabel("Import your Starling accounts and Spaces with a personal access token."), gbc)
+        header.add(JLabel("Import your Starling accounts and Spaces. Your computer talks only to Starling."), gbc)
 
         val help = JButton("Setup guide")
         help.isBorderPainted = false
