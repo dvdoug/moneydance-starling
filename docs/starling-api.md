@@ -75,13 +75,13 @@ Feed item (abridged):
 | `transactionTime` / `settlementTime` | Pending uses transaction; posted uses settlement |
 | `counterPartyName` / `reference` | Payee / memo |
 | `source` | `MASTER_CARD`, `DIRECT_DEBIT`, `ON_US_PAY_ME`, `INTERNAL_TRANSFER`, … |
-| `counterPartyType` / `counterPartyUid` | `CATEGORY` + uid for Space movements |
+| `counterPartyType` / `counterPartyUid` | Current-account Space movements: `CATEGORY` + the Space uid. Space-side of the same move: `CUSTOMER` + holder uid (not a category). |
 
 Statuses we import as pending: `PENDING`, `UPCOMING`, `RETRYING`.  
 Posted: `SETTLED` (and money-back **sources** such as `FASTER_PAYMENTS_REVERSAL`, `MASTERCARD_CHARGEBACK`, `DIRECT_DEBIT_DISPUTE`).  
 Skip: `DECLINED`, `ACCOUNT_CHECK`, `UPCOMING_CANCELLED`, `REVERSED` with no `settlementTime`.
 
-Same-account Spending Space funding is usually `INTERNAL_TRANSFER` + `CATEGORY`. Personal → Easy Saver Spaces is `ON_US_PAY_ME` + `CATEGORY` (different Starling account; it **does** leave Personal).
+Same-account Spending Space funding is usually `INTERNAL_TRANSFER` + `CATEGORY`. Current account → savings Spaces is `ON_US_PAY_ME`: `CATEGORY` + Space uid on the current-account feed, `CUSTOMER` + holder uid on the Space feed. That money **does** leave the current account. Joint and business current accounts use the same types.
 
 ### Holder
 

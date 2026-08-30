@@ -199,6 +199,20 @@ object TxnRouter {
         val feedMapped = feed.id in mappedIds
         val parentMapped = parentMain != null && parentMain.id in mappedIds
 
+        // Space feeds list the other-account leg as ON_US_PAY_ME + CUSTOMER (holder uid),
+        // not CATEGORY. Skip that duplicate when the other Starling account is mapped.
+        if (feed.kind != SourceKind.MAIN &&
+            isOnUsFromCustomer(txn) &&
+            otherAccountMainMapped(feed, sources, mappedIds)
+        ) {
+            return null
+        }
+        if (feed.kind != SourceKind.MAIN && isInternalMove(txn) &&
+            otherMappedMain(txn, feed, sources, byCat, mappedIds) != null
+        ) {
+            return null
+        }
+
         if (feed.kind == SourceKind.MAIN) {
             if (isInternalMove(txn)) {
                 val other = txn.counterPartyUid?.let { byCat[it] }
@@ -225,5 +239,42 @@ object TxnRouter {
         // Savings Space: own mapping, else parent savings account catch-all, else skip.
         if (feedMapped) return feed
         return if (parentMapped) parentMain else null
+    }
+
+    private fun isOnUsFromCustomer(txn: BankTxn): Boolean {
+        return txn.source.equals("ON_US_PAY_ME", ignoreCase = true) &&
+            txn.counterPartyType.equals("CUSTOMER", ignoreCase = true)
+    }
+
+    private fun otherAccountMainMapped(
+        feed: MappableSource,
+        sources: List<MappableSource>,
+        mappedIds: Set<String>
+    ): Boolean {
+        return sources.any {
+            it.kind == SourceKind.MAIN && it.accountUid != feed.accountUid && it.id in mappedIds
+        }
+    }
+
+    /**
+     * The other Starling **account** (MAIN row) for a CATEGORY internal move, if that account
+     * is mapped and is not this feed's account. That MAIN feed already has the transfer.
+     */
+    private fun otherMappedMain(
+        txn: BankTxn,
+        feed: MappableSource,
+        sources: List<MappableSource>,
+        byCat: Map<String, MappableSource>,
+        mappedIds: Set<String>
+    ): MappableSource? {
+        val other = txn.counterPartyUid?.let { byCat[it] }
+        val otherMain = when {
+            other?.kind == SourceKind.MAIN -> other
+            other != null -> sources.firstOrNull { it.accountUid == other.accountUid && it.kind == SourceKind.MAIN }
+            else -> sources.firstOrNull { it.kind == SourceKind.MAIN && it.categoryUid == txn.counterPartyUid }
+        } ?: return null
+        if (otherMain.accountUid == feed.accountUid) return null
+        if (otherMain.id !in mappedIds) return null
+        return otherMain
     }
 }

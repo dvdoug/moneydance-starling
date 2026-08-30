@@ -1,5 +1,9 @@
 # Changelog
 
+## 7 - 2026-08-30
+
+Do not import the Space-side of a transfer when the current account is mapped. Confirm the current-account row as a transfer instead.
+
 ## 6 - 2026-08-30
 
 Honour Starling rate limits: slower request spacing, retry on HTTP 429, and do not fetch years before the account opened.

@@ -4,7 +4,7 @@ Instructions for AI coding agents working in this repository. Humans should star
 
 ## Current state (read this first)
 
-Shipped as **`module_build` 6** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.md](CHANGELOG.md) must stay in lockstep). First public build of the Starling importer.
+Shipped as **`module_build` 7** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.md](CHANGELOG.md) must stay in lockstep). First public build of the Starling importer.
 
 **Import path (do not regress):** write `OnlineTxn`s onto `account.getDownloadedTxns()`, then `MoneydanceGUI.showDownloadedTxns(account)` (`OnlineManager.processDownloadedTxns`). That is Moneydance’s OFX Confirm / Merge path (`ol.orig-txn`, blue dots). **Do not create `ParentTxn`s.**
 
@@ -17,7 +17,7 @@ Shipped as **`module_build` 6** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.
 - Progress: `MoneydanceGUI.setStatus("Starling: …", progress)` and Help → Console (`starling:` via `System.err` + `AppDebug.ALL`). Never log the PAT.
 - From date: this run uses `syncStartDate` if set (default first of month). If From is **blank** and we already have `lastPostedDate`, fetch last posted − 31 days. After a **successful** import, set From to `max(current From, lastPostedDate − 31 days)` — never earlier than the date the user set.
 - Posted FITID `starling:{categoryUid}:{feedItemUid}`; pending `starling:pending:…`. Skip only live register `ParentTxn` FITIDs. Pending set-reconcile **unconfirmed** (`isNew`) pending parents on the mapped account only; never `deleteItem` confirmed rows.
-- Routing: unmapped **Spending Space** (same Starling account) — skip `INTERNAL_TRANSFER` on the parent; merchants from that Space land on the parent. Unmapped **savings Space** — fold into the mapped savings **account** if that account is mapped; else skip the Space feed. Personal `ON_US_PAY_ME` to those Spaces still lands on Personal if Personal is mapped. Mapping table groups account then indented children. Do not infer leftover Spaces from names. FITID uses the **feed** category uid even when folding onto a parent mapping.
+- Routing: unmapped **Spending Space** (same Starling account) — skip `INTERNAL_TRANSFER` on the parent; merchants from that Space land on the parent. Unmapped **savings Space** — fold into the mapped savings **account** if that account is mapped; else skip the Space feed. Current-account `ON_US_PAY_ME` to those Spaces still lands on the current account if that account is mapped. Space-side of that move is `ON_US_PAY_ME` + `CUSTOMER` (holder uid, not a category) — skip it when **any other** Starling account MAIN is mapped (joint/business use the same rule; do not special-case the name Personal). Mapping table groups account then indented children. Do not infer leftover Spaces from names. FITID uses the **feed** category uid even when folding onto a parent mapping.
 - Feed window: `transactions-between` max ~180 days (`QUERY_EXCEEDING_MAX_TIME_RANGE`). Chunk. PAT rate limit 5 rps / 1000 per day.
 - `meta_info.dict` must include `"minbuild" = "5100"` (Moneydance 2024). Missing `minbuild` → **Extension version too old**.
 - `module_desc`: unofficial Starling import via PAT; unaffiliated disclaimer. Do not imply this is a Starling or Infinite Kind product.

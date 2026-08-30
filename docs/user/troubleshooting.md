@@ -28,6 +28,19 @@ Old rows stay put. New Imports follow the new mapping.
 
 `[PENDING]` until it posts. Moneydance uses the settlement date. If you Merged the pending row into a reminder, merge the settled download too. The reminder’s name stays.
 
+## A transfer into a Space does not show as coming from the current account
+
+Starling lists the same movement twice: money leaving the current account, and a credit on the Space (payee often your name). This extension imports **only the current-account row**. Confirm or Merge that as a transfer to the Space, matching your existing “Set aside money…” lines.
+
+If an older import already put a standalone credit on the Space:
+
+1. Install the current extension so Import will not recreate those Space-side rows.
+2. Delete the extra Space rows — unconfirmed (blue-dot) downloads, or the confirmed standalone credit if you already accepted it.
+3. Keep the original transfer that already links the current account to the Space.
+4. On the current account, Merge any extra blue-dot downloads into those existing transfers. Do not Confirm them as new.
+
+You do not need a FITID cleanup script unless those standalone credits were merged into *other* existing transactions.
+
 ## Wrong register or currency
 
 **Import into** is which Moneydance account receives the row. Delete unconfirmed downloads (or undo), change the mapping, Import again. Currencies must match (usually GBP).
