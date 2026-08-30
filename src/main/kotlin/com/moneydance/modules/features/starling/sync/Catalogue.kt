@@ -32,7 +32,8 @@ object Catalogue {
                     parentName = acc.name,
                     currency = acc.currency,
                     kind = SourceKind.MAIN,
-                    archived = false
+                    archived = false,
+                    accountType = acc.accountType
                 )
             )
         }
@@ -53,11 +54,42 @@ object Catalogue {
                     parentName = live?.parentName ?: saved?.parentName ?: acc?.name.orEmpty(),
                     currency = acc?.currency ?: "GBP",
                     kind = live?.kind ?: saved?.kind ?: SourceKind.SAVINGS,
-                    archived = archived
+                    archived = archived,
+                    accountType = acc?.accountType.orEmpty()
                 )
             )
         }
-        return rows
+        return order(accounts, rows)
+    }
+
+    fun order(accounts: List<StarlingAccount>, rows: List<MappableSource>): List<MappableSource> {
+        val byAcc = rows.groupBy { it.accountUid }
+        val accOrder = accounts.sortedWith(
+            compareBy<StarlingAccount> { typeRank(it.accountType) }.thenBy { it.name.lowercase() }
+        )
+        val out = mutableListOf<MappableSource>()
+        val seen = mutableSetOf<String>()
+        for (acc in accOrder) {
+            val group = byAcc[acc.accountUid] ?: continue
+            seen.add(acc.accountUid)
+            val main = group.filter { it.kind == SourceKind.MAIN }
+            val live = group.filter { it.kind != SourceKind.MAIN && !it.archived }
+                .sortedBy { it.name.lowercase() }
+            val archived = group.filter { it.archived }.sortedBy { it.name.lowercase() }
+            out += main + live + archived
+        }
+        byAcc.forEach { (uid, group) ->
+            if (uid in seen) return@forEach
+            out += group
+        }
+        return out
+    }
+
+    private fun typeRank(type: String): Int = when (type.uppercase()) {
+        "PRIMARY" -> 0
+        "ADDITIONAL" -> 1
+        "SAVINGS" -> 2
+        else -> 9
     }
 
     fun mergeStored(
@@ -123,6 +155,23 @@ object Catalogue {
 }
 
 object TxnRouter {
+    fun shouldFetch(src: MappableSource, sources: List<MappableSource>, mappedIds: Set<String>): Boolean {
+        if (src.id in mappedIds) return true
+        val parent = sources.firstOrNull { it.accountUid == src.accountUid && it.kind == SourceKind.MAIN }
+        return parent != null && parent.id in mappedIds && src.kind != SourceKind.MAIN
+    }
+
+    fun mappingForFetch(
+        src: MappableSource,
+        sources: List<MappableSource>,
+        mapped: List<com.moneydance.modules.features.starling.settings.AccountMapping>
+    ): com.moneydance.modules.features.starling.settings.AccountMapping? {
+        mapped.firstOrNull { it.sourceId == src.id }?.let { return it }
+        val parent = sources.firstOrNull { it.accountUid == src.accountUid && it.kind == SourceKind.MAIN }
+            ?: return null
+        return mapped.firstOrNull { it.sourceId == parent.id }
+    }
+
     fun isInternalMove(txn: BankTxn): Boolean {
         if (txn.counterPartyType.equals("CATEGORY", ignoreCase = true)) {
             val src = txn.source?.uppercase().orEmpty()
@@ -171,7 +220,8 @@ object TxnRouter {
             }
         }
 
-        // Savings pot (possibly on another Starling account)
-        return if (feedMapped) feed else null
+        // Savings pot: own mapping, else parent savings account catch-all, else skip.
+        if (feedMapped) return feed
+        return if (parentMapped) parentMain else null
     }
 }

@@ -15,6 +15,9 @@ object FitIds {
     fun pendingKey(categoryUid: String, txn: BankTxn): String =
         "$PREFIX_PENDING$categoryUid:${txn.id}"
 
+    fun feedCategory(txn: BankTxn, fallback: String): String =
+        txn.categoryUid.trim().ifBlank { fallback }
+
     fun isOurs(fitId: String?): Boolean {
         val v = fitId ?: return false
         return v.startsWith(PREFIX_POSTED)

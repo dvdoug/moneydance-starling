@@ -59,7 +59,7 @@ class StarlingWindow(
         string = " "
         isVisible = false
     }
-    private val mappingPanel = AccountMappingPanel(book)
+    private val mappingPanel = AccountMappingPanel(book, mdGUI)
     private val refreshButton = JButton("Refresh accounts")
     private val addButton = JButton("Add token")
     private val removeButton = JButton("Remove token")

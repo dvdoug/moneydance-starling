@@ -1,36 +1,19 @@
-# Create a Starling personal access token
+# Create a Starling token
 
-The extension reads **your** Starling accounts. Starling issues a **personal access token (PAT)** in the [Developer Portal](https://developer.starlingbank.com/). It does not expire. Treat it like a password.
+You are not becoming a developer. Starling’s [Developer Portal](https://developer.starlingbank.com/) is where they issue a **personal access token**: a long password so this unofficial extension can **read** your accounts. It never sends payments. Treat the token like online banking.
 
-You need a Starling current account and a developer login. Link them in the portal first (Connect accounts), then create a token. Give it a name such as `Moneydance`.
+## 1. Open the portal
 
-The portal groups scopes under the headings below. Tick **only** the ones listed. Leave every other box in that heading off.
+Sign in with the **same Starling login** as the app. **Connect accounts** so your bank account is linked to the developer login, then create a personal access token. Name it `Moneydance`.
 
-## Read Financial (View your financial information & transactions)
+## 2. Tick only these boxes
 
-Turn **on**:
+**Read Financial**
 
 - `space:read`
 - `transaction:read`
-- `savings-goal:read` (optional; same active pots as `space:read`. It does **not** list archived Spaces or old goals)
 
-Turn **off** everything else in this heading, including `balance:read`, `savings-goal-transfer:read`, statements, payees, and mandates.
-
-`space:read` is how we list Spending Spaces **and** savings pots (names and balances). `transaction:read` is the transaction feed (including pending and upcoming).
-
-`savings-goal-transfer:read` is only the **standing order** that tops a savings pot up (amount, next date). Transfers still appear in the transaction feed without it. Leave it off unless you want that schedule in the mapping table later.
-
-## Edit Financial (Edit your financial information & transactions)
-
-Turn **off** the whole heading. We never change Starling (no card controls, no deleting payees, no editing transaction tags).
-
-## Transact Financial (Make financial transactions on your behalf)
-
-Turn **off** the whole heading. We never send payments or create payees.
-
-## Read Personal (View your personal information)
-
-Turn **on**:
+**Read Personal**
 
 - `account:read`
 - `account-list:read`
@@ -38,24 +21,20 @@ Turn **on**:
 - `account-holder-type:read`
 - `customer:read`
 
-Turn **off** everything else in this heading, including `account-identifier:read`, `card:read`, and `address:read`.
+Leave **Edit Financial**, **Transact Financial**, and **Edit Personal** entirely off. Leave `card:read` off.
 
-`account:read` and `account-list:read` together list your accounts (GBP, euro, and so on). The name, type, and `customer:read` boxes are so the extension can label the token (for example *Douglas (Personal)*).
+`space:read` lists **active** Spaces and savings pots. Closed ones can still show in Moneydance after the first **Validating…** when you add the token. You do not need `savings-goal:read` for that.
 
-`card:read` is **card hardware**: last digits, whether the physical/virtual card is on, ATM / online / wallet switches. Card **payments** come from `transaction:read`, not this. Leave it off.
+## 3. Copy the token once
 
-## Edit Personal (Edit your personal information)
+Copy it. Do not screenshot or email it.
 
-Turn **off** the whole heading. We never change your address, email, or profile image.
+Starling **cannot add ticks to a token you already made**. Wrong boxes means create a **new** token. If you miss a box, **Add token** in Moneydance will name it.
 
-## Joint or business as well as personal
+## 4. Joint or business
 
-Each Starling account-holder type is a **separate** token (personal, joint, business, sole trader). Create one PAT per type you want in this Moneydance file, with the same ticks.
+Personal, joint, and business are separate tokens. Use the same ticks on each.
 
-## After you copy the token
+## Next
 
-Paste it into the extension as **Personal access token (PAT)** and click **Add token**. The first save shows **Validating…** while it reads your history so archived Spaces can appear in the mapping table. That walk happens once per token.
-
-Do not email the token or put it in a screenshot.
-
-If **Refresh accounts** later shows no Spaces, `space:read` was left off. If it shows no accounts at all, check `account:read` and `account-list:read`. If transactions are missing, check `transaction:read`.
+[Use the extension in Moneydance](moneydance.md).

@@ -5,13 +5,16 @@ import com.moneydance.modules.features.starling.api.MappableSource
 import com.moneydance.modules.features.starling.api.SourceKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class TxnRouterTest {
     private val personal = src("acc:main", "acc", "main", "Personal", SourceKind.MAIN)
     private val bills = src("acc:bills", "acc", "bills", "Bills", SourceKind.SPENDING, parent = "Personal")
+    private val easy = src("sav:main", "sav", "emain", "Easy Saver", SourceKind.MAIN)
     private val holiday = src("sav:hol", "sav", "hol", "Holiday", SourceKind.SAVINGS, parent = "Easy Saver")
-    private val all = listOf(personal, bills, holiday)
+    private val all = listOf(personal, bills, easy, holiday)
 
     @Test
     fun unmappedSpendingInternalSkippedOnMain() {
@@ -44,9 +47,27 @@ class TxnRouterTest {
     }
 
     @Test
-    fun unmappedSavingsFeedSkipped() {
+    fun unmappedSavingsFeedSkippedIfParentUnmapped() {
         val inn = BankTxn("1", "hol", 100.0, "GBP", "2026-01-01", "Douglas", "Transfer", false, "ON_US_PAY_ME", "CATEGORY", "main", "IN")
         assertNull(TxnRouter.destination(inn, holiday, all, setOf(personal.id)))
+    }
+
+    @Test
+    fun unmappedSavingsFeedFoldsToParentIfParentMapped() {
+        val inn = BankTxn("1", "hol", 100.0, "GBP", "2026-01-01", "Douglas", "Transfer", false, "ON_US_PAY_ME", "CATEGORY", "emain", "IN")
+        assertEquals(easy, TxnRouter.destination(inn, holiday, all, setOf(personal.id, easy.id)))
+    }
+
+    @Test
+    fun mappedSavingsPotWinsOverParentCatchAll() {
+        val inn = BankTxn("1", "hol", 100.0, "GBP", "2026-01-01", "Douglas", "Transfer", false, "ON_US_PAY_ME", "CATEGORY", "emain", "IN")
+        assertEquals(holiday, TxnRouter.destination(inn, holiday, all, setOf(personal.id, easy.id, holiday.id)))
+    }
+
+    @Test
+    fun shouldFetchUnmappedPotWhenParentMapped() {
+        assertTrue(TxnRouter.shouldFetch(holiday, all, setOf(easy.id)))
+        assertFalse(TxnRouter.shouldFetch(holiday, all, setOf(personal.id)))
     }
 
     private fun move(source: String, otherCat: String) = BankTxn(

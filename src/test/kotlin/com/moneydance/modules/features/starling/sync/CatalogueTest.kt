@@ -19,6 +19,7 @@ class CatalogueTest {
         val charity = rows.first { it.categoryUid == "old" }
         assertTrue(charity.archived)
         assertTrue(charity.displayName.contains("(archived)"))
+        assertTrue(charity.displayName.startsWith(" "))
     }
 
     @Test
@@ -28,5 +29,19 @@ class CatalogueTest {
         val rows = Catalogue.stitch(listOf(acc), live, emptyList())
         val bills = rows.first { it.categoryUid == "bills" }
         assertEquals(false, bills.archived)
+        assertTrue(bills.displayName.startsWith(" "))
+        assertEquals("Personal", rows.first().displayName)
+    }
+
+    @Test
+    fun groupsChildrenUnderAccount() {
+        val personal = StarlingAccount("p", "pm", "Personal", "GBP", "PRIMARY", null)
+        val saver = StarlingAccount("s", "sm", "Easy Saver", "GBP", "SAVINGS", null)
+        val live = listOf(
+            StarlingSpace("s", "hol", "Home repairs", SourceKind.SAVINGS, parentName = "Easy Saver"),
+            StarlingSpace("p", "bills", "Bills", SourceKind.SPENDING, parentName = "Personal")
+        )
+        val names = Catalogue.stitch(listOf(saver, personal), live, emptyList()).map { it.name }
+        assertEquals(listOf("Personal", "Bills", "Easy Saver", "Home repairs"), names)
     }
 }

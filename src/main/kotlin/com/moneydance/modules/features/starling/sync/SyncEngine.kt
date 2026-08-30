@@ -56,10 +56,12 @@ class SyncEngine(
 
         val desiredPending = linkedMapOf<String, BankTxn>()
         for (txn in pendingLf) {
-            desiredPending[FitIds.pendingKey(source.categoryUid, txn)] = txn
+            desiredPending[FitIds.pendingKey(FitIds.feedCategory(txn, source.categoryUid), txn)] = txn
         }
 
-        val newPosted = postedLf.filter { FitIds.posted(source.categoryUid, it.id) !in known }
+        val newPosted = postedLf.filter {
+            FitIds.posted(FitIds.feedCategory(it, source.categoryUid), it.id) !in known
+        }
         val dropped = pendingRegister.keys.filter { it !in desiredPending }.mapNotNull { key ->
             val snap = snapshotFromParent(mdAccount, pendingRegister[key]!!) ?: return@mapNotNull null
             key to snap
@@ -78,7 +80,7 @@ class SyncEngine(
 
         for (pair in promotions) {
             val existing = pendingRegister.remove(pair.pendingKey) ?: continue
-            val fitId = FitIds.posted(source.categoryUid, pair.posted.id)
+            val fitId = FitIds.posted(FitIds.feedCategory(pair.posted, source.categoryUid), pair.posted.id)
             MdAccess.setDescription(existing, pair.posted.payee())
             MdAccess.clearPendingFlag(existing)
             MdAccess.setRegisterFitId(existing, fitId)
@@ -88,7 +90,7 @@ class SyncEngine(
         }
 
         for (txn in postedLf) {
-            val fitId = FitIds.posted(source.categoryUid, txn.id)
+            val fitId = FitIds.posted(FitIds.feedCategory(txn, source.categoryUid), txn.id)
             if (txn.id in promotedPostedIds) continue
             if (fitId in known) {
                 postedSkipped++

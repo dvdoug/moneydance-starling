@@ -33,19 +33,14 @@ data class MappableSource(
     val parentName: String,
     val currency: String,
     val kind: SourceKind,
-    val archived: Boolean
+    val archived: Boolean,
+    val accountType: String = ""
 ) {
     val displayName: String
         get() {
             val archivedTag = if (archived) " (archived)" else ""
-            val owner = parentName.trim()
-            return if (kind == SourceKind.MAIN) {
-                "$name$archivedTag"
-            } else if (owner.isNotEmpty()) {
-                "$name$archivedTag  ·  $owner"
-            } else {
-                "$name$archivedTag"
-            }
+            val prefix = if (kind == SourceKind.MAIN) "" else "    "
+            return "$prefix$name$archivedTag"
         }
 
     companion object {

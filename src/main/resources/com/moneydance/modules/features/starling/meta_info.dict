@@ -3,6 +3,6 @@
   "module_name" = "Starling Bank"
   "module_desc" = "Import Starling Bank transactions into Moneydance using a personal access token. Unofficial. Not affiliated with Starling Bank or The Infinite Kind."
   "id" = "starling"
-  "module_build" = "2"
+  "module_build" = "3"
   "minbuild" = "5100"
 }

@@ -68,14 +68,13 @@ object SyncService {
                 val buckets = linkedMapOf<String, MutableList<BankTxn>>()
                 mapped.forEach { buckets[it.sourceId] = mutableListOf() }
 
-                val feedsToFetch = sources.filter { src ->
-                    src.id in buckets || src.kind != com.moneydance.modules.features.starling.api.SourceKind.MAIN
-                }.ifEmpty { sources }
+                val mappedIds = mapped.map { it.sourceId }.toSet()
+                val feedsToFetch = sources.filter { TxnRouter.shouldFetch(it, sources, mappedIds) }
 
                 feedsToFetch.forEachIndexed { index, src ->
                     val token = tokenByAccount[src.accountUid] ?: tokens.first().second
                     val client = StarlingClient(token)
-                    val mapping = mapped.firstOrNull { it.sourceId == src.id }
+                    val mapping = TxnRouter.mappingForFetch(src, sources, mapped)
                     val fromIso = mapping?.let { SyncEngine.fetchFromDate(it) } ?: mapped.minOfOrNull {
                         SyncEngine.fetchFromDate(it) ?: "2000-01-01"
                     }
@@ -88,7 +87,7 @@ object SyncService {
                     try {
                         val txns = client.transactionsBetween(src.accountUid, src.categoryUid, from, today)
                         for (txn in txns) {
-                            val dest = TxnRouter.destination(txn, src, sources, mapped.map { it.sourceId }.toSet())
+                            val dest = TxnRouter.destination(txn, src, sources, mappedIds)
                                 ?: continue
                             if (dest.id in buckets) buckets[dest.id]?.add(txn)
                         }

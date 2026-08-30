@@ -1,57 +1,45 @@
 # If something looks wrong
 
-## Add token says the token is missing a permission
+## Add token says a permission is missing
 
-Starling named the missing ticks (for example `space:read`). You cannot add boxes to an existing token. Create a **new** PAT in the Developer Portal with every box in [setup](setup.md), then Add token again.
+The message names the missing ticks (for example `space:read`). You **cannot** add boxes to that token. Create a **new** token with every required box in [setup](setup.md), then **Add token** again.
 
-## Refresh accounts shows no Spaces
+## The table has accounts but few Spaces
 
-Turn on `space:read` (new token). Archived Spaces only appear after the first **Validating…** walk, not from Refresh alone.
+If **Add token** already succeeded, the required ticks are fine. You may have no live Spaces. Closed ones are marked **(archived)** after the first **Validating…**. **Refresh accounts** only updates what Starling lists as live, and keeps archived rows you already found.
 
-## Import says up to date but you expected new rows
+## Import says up to date
 
-- Already-imported posted transactions are skipped on purpose (they keep a hidden id). Importing the same month twice should not create duplicates.
-- **From** may have walked forward after the last success. Type an older From and Import again if you want a longer window.
-- Check the transaction in the Starling app first. If it is not there, Moneydance cannot invent it.
+The same transactions are not imported twice. **From** may have moved forward — type an older **From** and Import again. If it is not in the Starling app, it will not appear here.
 
-## Easy Saver £100 still on the current account
+## Money sent to Easy Saver still shows on the current account
 
-Easy Saver is a **different** Starling account. If that pot is not mapped, the current account **must** show the money leaving. Map the pot to a Moneydance account if you want it as a movement between accounts.
+A savings account is separate from the current account. If the current account is mapped, Moneydance **must** show the money leaving. Map Easy Saver (and pots if you want their own registers) if you want the other side.
 
-## Spending Space Tesco on the current account
+## Spending Space purchases on the current account
 
-That Space is **— not mapped —**. Map it if you want those spends on a subaccount.
+That Space is **— not mapped —**. Map it to a subaccount if you want those spends there.
 
-## I remapped a Space after importing
+## I changed Import into after importing
 
-History does not move. New imports follow the new mapping. Old rows stay on the account they landed on.
+Old rows stay put. New Imports follow the new mapping.
 
-## Pending card holds
+## Pending, Merge, dates
 
-They show as `[PENDING]` until they post. The app may still show the original tap time; the register uses the settlement date after it posts. If you **Merged** the pending row into a reminder, merge the settled download too. The reminder’s name stays.
+`[PENDING]` until it posts. Moneydance uses the settlement date. If you Merged the pending row into a reminder, merge the settled download too. The reminder’s name stays.
 
-## Wrong Moneydance account
+## Wrong register or currency
 
-That is the **Import into** column in this extension.
+**Import into** is which Moneydance account receives the row. Delete unconfirmed downloads (or undo), change the mapping, Import again. Currencies must match (usually GBP).
 
-If a row landed in the wrong register, delete those unconfirmed downloads (or undo) and change **Import into**, then Import again.
+## Starling asked us to slow down
 
-## Amounts or dates look off
-
-Card payments use tap time while pending and settlement date once posted. Faster Payments are usually the same calendar day for both. The extension does not flip signs; Starling `OUT` is money leaving.
-
-## Currency mismatch
-
-The Moneydance account’s currency must match the Starling account (usually GBP).
-
-## HTTP 429 / slow down
-
-Personal tokens are limited to 5 requests a second and 1000 a day. Wait and try again.
+Personal tokens can only call so often. Wait a minute and try again.
 
 ## The yellow Download button in the register
 
-That is Moneydance’s own online-banking signup, not this extension. Ignore it. Confirm and Merge for Starling rows use the blue-dot confirmation panel.
+That is Moneydance’s own online-banking signup, not this extension. Ignore it. Starling uses the blue-dot confirmation panel.
 
 ## Still stuck
 
-Open **Help → Console Window** and look for `starling:` lines (no token is logged). You can also [open an issue](https://github.com/dvdoug/moneydance-starling/issues).
+**Help → Console Window**, lines starting `starling:` (no token). [Open an issue](https://github.com/dvdoug/moneydance-starling/issues).

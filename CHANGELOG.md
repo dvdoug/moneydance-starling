@@ -1,5 +1,9 @@
 # Changelog
 
+## 3 - 2026-08-30
+
+Grouped mapping table (accounts, then Spaces). Unmapped savings pots fold into a mapped savings account. Date picker for From. Clearer setup and troubleshooting.
+
 ## 2 - 2026-08-30
 
 Fixed Moneydance refusing the extension without `minbuild`. Named missing PAT scopes on Add token. Setup guide is the GitHub user doc. Mapping skip is **— not mapped —**.

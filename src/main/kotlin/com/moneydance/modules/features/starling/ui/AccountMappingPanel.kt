@@ -2,22 +2,31 @@ package com.moneydance.modules.features.starling.ui
 
 import com.infinitekind.moneydance.model.Account
 import com.infinitekind.moneydance.model.AccountBook
+import com.moneydance.apps.md.view.gui.MoneydanceGUI
+import com.moneydance.awt.JDateField
 import com.moneydance.modules.features.starling.api.MappableSource
 import com.moneydance.modules.features.starling.settings.AccountMapping
 import com.moneydance.modules.features.starling.sync.MdAccess
 import com.moneydance.modules.features.starling.sync.MdAccounts
+import com.moneydance.modules.features.starling.sync.SyncEngine
 import java.awt.BorderLayout
+import java.awt.Component
+import javax.swing.AbstractCellEditor
+import javax.swing.BorderFactory
 import javax.swing.DefaultCellEditor
 import javax.swing.JComboBox
-import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 import javax.swing.JTable
+import javax.swing.JTextArea
 import javax.swing.ListSelectionModel
 import javax.swing.table.AbstractTableModel
+import javax.swing.table.DefaultTableCellRenderer
+import javax.swing.table.TableCellEditor
 
 class AccountMappingPanel(
-    book: AccountBook?
+    book: AccountBook?,
+    mdGUI: MoneydanceGUI
 ) : JPanel(BorderLayout(0, 8)) {
 
     private val mdChoices: List<AccountChoice> = listOf(AccountChoice(null)) +
@@ -34,12 +43,23 @@ class AccountMappingPanel(
         table.tableHeader.reorderingAllowed = false
         table.putClientProperty("terminateEditOnFocusLost", true)
         table.columnModel.getColumn(1).cellEditor = DefaultCellEditor(JComboBox(mdChoices.toTypedArray()))
-        table.columnModel.getColumn(0).preferredWidth = 300
-        table.columnModel.getColumn(1).preferredWidth = 240
-        table.columnModel.getColumn(2).preferredWidth = 100
+        table.columnModel.getColumn(2).cellEditor = FromDateEditor(mdGUI)
+        table.columnModel.getColumn(2).cellRenderer = FromDateRenderer(mdGUI)
+        table.columnModel.getColumn(0).preferredWidth = 280
+        table.columnModel.getColumn(1).preferredWidth = 220
+        table.columnModel.getColumn(2).preferredWidth = 130
         add(JScrollPane(table), BorderLayout.CENTER)
         add(
-            JLabel("<html>Choose <b>— not mapped —</b> to skip that Space. Spending from an unmapped Spending Space is imported into the current account.</html>"),
+            JTextArea().apply {
+                text = "Map each Starling account you want in Moneydance. Leave a Spending Space unmapped to keep its purchases on the current account (top-ups are hidden). Money sent to a savings account always leaves the current account; map that savings account to collect any pots you did not map separately.\n" +
+                    "From uses your Moneydance date format (click for a calendar). Clear it for all history Starling has."
+                isEditable = false
+                lineWrap = true
+                wrapStyleWord = true
+                background = null
+                isOpaque = false
+                border = BorderFactory.createEmptyBorder()
+            },
             BorderLayout.SOUTH
         )
     }
@@ -110,7 +130,10 @@ class AccountMappingPanel(
             val row = rows[rowIndex]
             when (columnIndex) {
                 1 -> row.mdUuid = (aValue as? AccountChoice)?.account?.let { MdAccess.uuid(it) }
-                2 -> row.startDate = aValue?.toString()
+                2 -> {
+                    val text = aValue?.toString()?.trim()
+                    row.startDate = text?.ifBlank { null }
+                }
             }
             fireTableCellUpdated(rowIndex, columnIndex)
         }
@@ -143,5 +166,48 @@ class AccountMappingPanel(
         }
 
         override fun hashCode(): Int = account?.let { MdAccess.uuid(it) }?.hashCode() ?: 0
+    }
+
+    private class FromDateEditor(mdGUI: MoneydanceGUI) : AbstractCellEditor(), TableCellEditor {
+        private val field = JDateField(mdGUI)
+
+        override fun getTableCellEditorComponent(
+            table: JTable,
+            value: Any?,
+            isSelected: Boolean,
+            row: Int,
+            column: Int
+        ): Component {
+            val iso = value as? String
+            if (iso.isNullOrBlank()) {
+                field.text = ""
+            } else {
+                field.setDateInt(SyncEngine.isoToDateInt(iso))
+            }
+            return field
+        }
+
+        override fun getCellEditorValue(): Any {
+            if (field.text.trim().isEmpty()) return ""
+            val dateInt = field.parseDateInt()
+            return SyncEngine.dateIntToIso(dateInt)
+        }
+    }
+
+    private class FromDateRenderer(mdGUI: MoneydanceGUI) : DefaultTableCellRenderer() {
+        private val format = mdGUI.preferences.shortDateFormatter
+
+        override fun setValue(value: Any?) {
+            val iso = value as? String
+            text = if (iso.isNullOrBlank()) {
+                "All history"
+            } else {
+                try {
+                    format.format(SyncEngine.isoToDateInt(iso))
+                } catch (_: Exception) {
+                    iso
+                }
+            }
+        }
     }
 }
