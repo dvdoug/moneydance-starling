@@ -29,10 +29,10 @@ A joint or business Starling needs its **own** token (same ticks as [setup](setu
 The table has **Starling account**, **Import into**, and **From**. Default **Import into** is **— not mapped —**.
 
 - **Current account** (Personal) — map this if you want the register to match the main Starling feed (cards, salary, bills).
-- **Spending Spaces** sit *inside* the current account. Leave them **— not mapped —** and purchases from that Space still land on the current account (top-ups are hidden). Map to a subaccount you already created if you want a separate register. The extension does not create accounts.
-- **A savings account** (Easy Saver and similar) is a **separate** Starling account, even if you keep it as a Moneydance subaccount of your current account. Money moved there **has left** the current account, so Personal still shows the outflow. Map the savings account to collect any pots you did not map separately. Map a pot (Home repairs, Service Charge, …) only when it should have its own register.
+- **Spending Spaces** sit *inside* the current account. Leave them **— not mapped —** and purchases from that Space still land on the current account. Moving money from the current account *into* that Space is not imported (the money has not left the bank). Map to a subaccount you already created if you want a separate register. The extension does not create accounts.
+- **A savings account** (Easy Saver and similar) is a **separate** Starling account, even if you keep it as a Moneydance subaccount of your current account. Money moved there **has left** the current account, so Personal still shows the outflow. Map the savings account to collect any Spaces you did not map separately. Map a Space (Home repairs, Service Charge, …) only when it should have its own register.
 
-You can map a Starling savings account or pot to a **subaccount** of your Moneydance current account. That is a normal **Import into** choice.
+You can map a Starling savings account or Space to a **subaccount** of your Moneydance current account. That is a normal **Import into** choice.
 
 Closed Spaces are marked **(archived)** and stay in the table under the account they belonged to.
 

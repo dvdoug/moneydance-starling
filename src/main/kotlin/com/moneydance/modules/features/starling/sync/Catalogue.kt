@@ -220,7 +220,7 @@ object TxnRouter {
             }
         }
 
-        // Savings pot: own mapping, else parent savings account catch-all, else skip.
+        // Savings Space: own mapping, else parent savings account catch-all, else skip.
         if (feedMapped) return feed
         return if (parentMapped) parentMain else null
     }

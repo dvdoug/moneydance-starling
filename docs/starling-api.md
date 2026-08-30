@@ -57,7 +57,7 @@ Lists accounts for this holder. Typical: `PRIMARY` “Personal” (GBP) plus `SA
 }
 ```
 
-Scope: `space:read`. Archived pots are **not** listed. We discover them from `CATEGORY` counterparties on the main feed during the first PAT walk. Do not call `/savings-goals` (`savings-goal:read`); it is the same active list and does not return archived ids.
+Scope: `space:read`. Archived Spaces are **not** listed. We discover them from `CATEGORY` counterparties on the main feed during the first PAT walk. Do not call `/savings-goals` (`savings-goal:read`); it is the same active list and does not return archived ids.
 
 ### `GET /feed/account/{accountUid}/category/{categoryUid}/transactions-between`
 
@@ -75,13 +75,13 @@ Feed item (abridged):
 | `transactionTime` / `settlementTime` | Pending uses transaction; posted uses settlement |
 | `counterPartyName` / `reference` | Payee / memo |
 | `source` | `MASTER_CARD`, `DIRECT_DEBIT`, `ON_US_PAY_ME`, `INTERNAL_TRANSFER`, … |
-| `counterPartyType` / `counterPartyUid` | `CATEGORY` + uid for Space / pot movements |
+| `counterPartyType` / `counterPartyUid` | `CATEGORY` + uid for Space movements |
 
 Statuses we import as pending: `PENDING`, `UPCOMING`, `RETRYING`.  
 Posted: `SETTLED` (and money-back **sources** such as `FASTER_PAYMENTS_REVERSAL`, `MASTERCARD_CHARGEBACK`, `DIRECT_DEBIT_DISPUTE`).  
 Skip: `DECLINED`, `ACCOUNT_CHECK`, `UPCOMING_CANCELLED`, `REVERSED` with no `settlementTime`.
 
-Same-account Spending Space funding is usually `INTERNAL_TRANSFER` + `CATEGORY`. Personal → Easy Saver pots is `ON_US_PAY_ME` + `CATEGORY` (different Starling account; it **does** leave Personal).
+Same-account Spending Space funding is usually `INTERNAL_TRANSFER` + `CATEGORY`. Personal → Easy Saver Spaces is `ON_US_PAY_ME` + `CATEGORY` (different Starling account; it **does** leave Personal).
 
 ### Holder
 

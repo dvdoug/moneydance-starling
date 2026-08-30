@@ -24,7 +24,7 @@ data class StarlingSpace(
     val parentName: String = ""
 )
 
-/** One row in the mapping table: a Starling account, Space, or savings pot. */
+/** One row in the mapping table: a Starling account or Space. */
 data class MappableSource(
     val id: String,
     val accountUid: String,

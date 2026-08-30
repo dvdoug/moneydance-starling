@@ -100,9 +100,9 @@ Currency: if Starling `currency` differs from the Moneydance account’s `Curren
 
 `TxnRouter` decides which mapping receives a feed item:
 
-- **Main feed, `INTERNAL_TRANSFER` / `ON_US_PAY_ME` + `CATEGORY`:** if the other category is a **Spending Space on the same account** and that Space is not mapped, skip (CSV-like). Otherwise keep on the main mapping (Easy Saver and old savings pots actually leave Personal).
+- **Main feed, `INTERNAL_TRANSFER` / `ON_US_PAY_ME` + `CATEGORY`:** if the other category is a **Spending Space on the same account** and that Space is not mapped, skip (CSV-like). Otherwise keep on the main mapping (Easy Saver and old savings Spaces actually leave Personal).
 - **Spending Space feed:** if mapped, merchants and internals go there; if not, merchants go to the parent mapping and internals are skipped.
-- **Savings pot feed (other Starling account):** import only if that pot is mapped.
+- **Savings Space feed (other Starling account):** import only if that Space is mapped; otherwise fold into the mapped savings account if any.
 
 Catalogue: first PAT save walks the main category from `createdAt` in 180-day chunks and records every `CATEGORY` counterparty. Refresh merges live `/spaces` onto that list. Live miss → **(archived)**.
 

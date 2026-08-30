@@ -14,7 +14,7 @@ The same transactions are not imported twice. **From** may have moved forward â€
 
 ## Money sent to Easy Saver still shows on the current account
 
-A savings account is separate from the current account. If the current account is mapped, Moneydance **must** show the money leaving. Map Easy Saver (and pots if you want their own registers) if you want the other side.
+A savings account is separate from the current account. If the current account is mapped, Moneydance **must** show the money leaving. Map Easy Saver (and its Spaces if you want their own registers) if you want the other side.
 
 ## Spending Space purchases on the current account
 

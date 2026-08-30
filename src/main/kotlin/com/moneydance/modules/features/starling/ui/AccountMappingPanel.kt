@@ -51,7 +51,7 @@ class AccountMappingPanel(
         add(JScrollPane(table), BorderLayout.CENTER)
         add(
             JTextArea().apply {
-                text = "Map each Starling account you want in Moneydance. Leave a Spending Space unmapped to keep its purchases on the current account (top-ups are hidden). Money sent to a savings account always leaves the current account; map that savings account to collect any pots you did not map separately.\n" +
+                text = "Map each Starling account you want in Moneydance. Leave a Spending Space unmapped to keep its purchases on the current account; moving money into that Space is not imported (it has not left the bank). Money sent to a savings account always leaves the current account; map that savings account to collect any Spaces you did not map separately.\n" +
                     "From uses your Moneydance date format (click for a calendar). Clear it for all history Starling has."
                 isEditable = false
                 lineWrap = true

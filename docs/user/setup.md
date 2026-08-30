@@ -23,7 +23,7 @@ Sign in with the **same Starling login** as the app. **Connect accounts** so you
 
 Leave **Edit Financial**, **Transact Financial**, and **Edit Personal** entirely off. Leave `card:read` off.
 
-`space:read` lists **active** Spaces and savings pots. Closed ones can still show in Moneydance after the first **Validating…** when you add the token.
+`space:read` lists **active** Spaces. Closed ones can still show in Moneydance after the first **Validating…** when you add the token.
 
 ## 3. Copy the token once
 
