@@ -89,6 +89,7 @@ class SyncEngine(
             val existing = pendingRegister.remove(pair.pendingKey) ?: continue
             val fitId = FitIds.posted(FitIds.feedCategory(pair.posted, source.categoryUid), pair.posted.id)
             MdAccess.setDescription(existing, pair.posted.payee())
+            MdAccess.setDateInt(existing, isoToDateInt(pair.posted.date))
             MdAccess.clearPendingFlag(existing)
             MdAccess.setRegisterFitId(existing, fitId)
             known.add(fitId)

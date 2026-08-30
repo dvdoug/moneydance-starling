@@ -72,7 +72,7 @@ Feed item (abridged):
 | `feedItemUid` | Identity (always present) |
 | `amount.minorUnits` + `direction` | Unsigned amount; `OUT` → negative cashflow |
 | `status` | See below |
-| `transactionTime` / `settlementTime` | Pending uses transaction; posted uses settlement |
+| `transactionTime` / `settlementTime` | Pending uses transaction; posted uses settlement. Calendar day is Europe/London, not UTC. |
 | `counterPartyName` / `reference` | Payee / memo |
 | `source` | `MASTER_CARD`, `DIRECT_DEBIT`, `ON_US_PAY_ME`, `INTERNAL_TRANSFER`, … |
 | `counterPartyType` / `counterPartyUid` | Current-account Space movements: `CATEGORY` + the Space uid. Space-side of the same move: `CUSTOMER` + holder uid (not a category). |

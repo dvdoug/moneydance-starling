@@ -49,7 +49,7 @@ New rows appear as **unconfirmed downloads** (a solid blue dot), the same Confir
 - **Confirm** keeps the new row.
 - **Merge** combines it with a matching row you already typed (for example a reminder). Merge keeps the **existing** description.
 
-Pending card holds and upcoming Direct Debits show `[PENDING]` until they settle. The Starling app often keeps the tap time; Moneydance uses the **settlement** date so it lines up with a statement.
+Pending card holds and upcoming Direct Debits show `[PENDING]` until they settle. The Starling app often keeps the tap time; Moneydance uses the **settlement** date in UK time so it lines up with a statement (BACS often posts just after 11pm UTC).
 
 Progress is in the bottom status bar. Detail is in **Help → Console Window** (`starling:` lines). The token is never written there.
 

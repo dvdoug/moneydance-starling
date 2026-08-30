@@ -281,6 +281,12 @@ public final class MdAccess {
         return txn.getDateInt();
     }
 
+    public static void setDateInt(ParentTxn txn, int dateInt) {
+        txn.setDateInt(dateInt);
+        txn.setTaxDateInt(dateInt);
+        txn.syncItem();
+    }
+
     public static long getValue(ParentTxn txn) {
         return txn.getValue();
     }

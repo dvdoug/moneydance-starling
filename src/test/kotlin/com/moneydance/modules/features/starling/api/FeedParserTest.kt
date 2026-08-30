@@ -77,6 +77,20 @@ class FeedParserTest {
                    "counterPartyName":"TravelPerk","source":"DIRECT_CREDIT"}"""
         )
         assertEquals(5856.60, txn.amount, 0.001)
+        assertEquals("2026-08-27", txn.date)
+    }
+
+    @Test
+    fun bacsJustBeforeUtcMidnightUsesUkDate() {
+        val txn = item(
+            """{"feedItemUid":"s","categoryUid":"c","amount":{"currency":"GBP","minorUnits":7011},
+               "direction":"IN","status":"SETTLED",
+               "transactionTime":"2026-08-20T23:01:00.000Z",
+               "settlementTime":"2026-08-20T23:01:16.872Z",
+               "counterPartyName":"TravelPerk","source":"DIRECT_CREDIT"}"""
+        )
+        assertEquals("2026-08-21", txn.date)
+        assertFalse(txn.isPending)
     }
 
     @Test

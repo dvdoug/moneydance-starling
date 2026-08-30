@@ -1,5 +1,9 @@
 # Changelog
 
+## 12 - 2026-08-30
+
+Calendar dates use UK local time, not UTC. BACS credits that Starling stamps at 23:01 UTC land on the next morning in Britain.
+
 ## 11 - 2026-08-30
 
 Stop deleting the download rows we just added. Import was reporting “added 21” then pruning them before the register could show them.

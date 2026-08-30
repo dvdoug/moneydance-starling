@@ -1,12 +1,13 @@
 package com.moneydance.modules.features.starling.api
 
 import java.time.Instant
-import java.time.ZoneOffset
+import java.time.ZoneId
 import java.time.format.DateTimeParseException
 
 object FeedParser {
     private val PENDING_STATUSES = setOf("PENDING", "UPCOMING", "RETRYING")
     private val SKIP_STATUSES = setOf("DECLINED", "ACCOUNT_CHECK", "UPCOMING_CANCELLED")
+    private val UK: ZoneId = ZoneId.of("Europe/London")
 
     fun parseFeedItems(text: String): List<BankTxn> {
         val root = parseJson(text).obj()
@@ -121,7 +122,7 @@ object FeedParser {
         if (trimmed.length >= 10 && trimmed[4] == '-' && trimmed[7] == '-') {
             if (trimmed.length == 10) return trimmed
             return try {
-                Instant.parse(trimmed).atZone(ZoneOffset.UTC).toLocalDate().toString()
+                Instant.parse(trimmed).atZone(UK).toLocalDate().toString()
             } catch (_: DateTimeParseException) {
                 trimmed.take(10)
             }

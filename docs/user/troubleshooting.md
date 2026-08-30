@@ -26,7 +26,7 @@ Old rows stay put. New Imports follow the new mapping.
 
 ## Pending, Merge, dates
 
-`[PENDING]` until it posts. Moneydance uses the settlement date. If you Merged the pending row into a reminder, merge the settled download too. The reminder’s name stays.
+`[PENDING]` until it posts. Moneydance uses the UK settlement date (not UTC). If you Merged the pending row into a reminder, merge the settled download too. The reminder’s name stays. Already-confirmed rows keep the date they were given; delete an unconfirmed download and Import again to pick up a date fix.
 
 ## A transfer into a Space does not show as coming from the current account
 

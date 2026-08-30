@@ -115,7 +115,7 @@ Catalogue: first PAT save walks the main category from `createdAt` in 180-day ch
 4. Posted: skip if FITID known; else `downloaded.newTxn()`, fill, `STATUS_NEW`.
 5. Pending (`PENDING`, `UPCOMING`, `RETRYING`): set-reconcile; promote or remove as above; else add a NEW download.
 6. Skip `DECLINED`, `ACCOUNT_CHECK`, `UPCOMING_CANCELLED`, and `REVERSED` with no `settlementTime`.
-7. Dates: `transactionTime` while pending; `settlementTime` when settled.
+7. Dates: `transactionTime` while pending; `settlementTime` when settled. Convert those instants with **Europe/London**, not UTC (BACS often posts at 23:01Z = next UK calendar day in summer).
 8. `downloaded.syncItem()` + `account.downloadedTxnsUpdated()`.
 9. `MoneydanceGUI.showDownloadedTxns(account)`.
 10. On success, persist `lastPostedDate` and roll `syncStartDate`.
