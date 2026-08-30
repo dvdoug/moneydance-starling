@@ -4,7 +4,7 @@ Instructions for AI coding agents working in this repository. Humans should star
 
 ## Current state (read this first)
 
-Shipped as **`module_build` 10** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.md](CHANGELOG.md) must stay in lockstep). First public build of the Starling importer.
+Shipped as **`module_build` 11** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.md](CHANGELOG.md) must stay in lockstep). First public build of the Starling importer.
 
 **Import path (do not regress):** write `OnlineTxn`s onto `account.getDownloadedTxns()`, then `MoneydanceGUI.showDownloadedTxns(account)` (`OnlineManager.processDownloadedTxns`). That is Moneydance’s OFX Confirm / Merge path (`ol.orig-txn`, blue dots). **Do not create `ParentTxn`s.** Staging is always `OnlineTxn` + `showDownloadedTxns` (Moneydance auto-adds on the EDT). After that auto-add, for a mapped current-account ↔ Space movement, retarget the unconfirmed split to the other mapped bank account so both registers show one transfer. If a unique existing transfer matches date, amount, and other account, tag its FITID instead of adding a row. Space-side `ON_US_PAY_ME` + `CUSTOMER` is skipped when the other Starling account MAIN is mapped. Do not special-case the name “Personal”; joint and business current accounts use the same MAIN + counterpart rule.
 
@@ -17,6 +17,7 @@ Shipped as **`module_build` 10** (`Version.kt`, `meta_info.dict`, and [CHANGELOG
 - Progress: `MoneydanceGUI.setStatus("Starling: …", progress)` and Help → Console (`starling:` via `System.err` + `AppDebug.ALL`). Never log the PAT.
 - From date: this run uses `syncStartDate` if set (default first of month). If From is **blank** and we already have `lastPostedDate`, fetch last posted − 31 days. After a **successful** import, set From to `max(current From, lastPostedDate − 31 days)` — never earlier than the date the user set.
 - Posted FITID `starling:{categoryUid}:{feedItemUid}`; pending `starling:pending:…`. Skip only live register `ParentTxn` FITIDs. Pending set-reconcile **unconfirmed** (`isNew`) pending parents on the mapped account only; never `deleteItem` confirmed rows.
+- Prune download-list rows **only at the start of apply**, and only against FITIDs already on the live register. Do not prune after adding this run’s `OnlineTxn`s — that deletes them before `showDownloadedTxns`.
 - Routing: unmapped **Spending Space** (same Starling account) — skip `INTERNAL_TRANSFER` on the parent; merchants from that Space land on the parent. Unmapped **savings Space** — fold into the mapped savings **account** if that account is mapped; else skip the Space feed. Current-account `ON_US_PAY_ME` to a mapped Space becomes a Moneydance transfer to that mapping (or to the savings-account catch-all if the Space is unmapped). Space-side of that move is `ON_US_PAY_ME` + `CUSTOMER` (holder uid, not a category) — skip it when **any other** Starling account MAIN is mapped. Mapping table groups account then indented children. Do not infer leftover Spaces from names. FITID uses the **feed** category uid even when folding onto a parent mapping.
 - Feed window: `transactions-between` max ~180 days (`QUERY_EXCEEDING_MAX_TIME_RANGE`). Chunk. PAT rate limit 5 rps / 1000 per day.
 - `meta_info.dict` must include `"minbuild" = "5100"` (Moneydance 2024). Missing `minbuild` → **Extension version too old**.

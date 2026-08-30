@@ -1,5 +1,9 @@
 # Changelog
 
+## 11 - 2026-08-30
+
+Stop deleting the download rows we just added. Import was reporting “added 21” then pruning them before the register could show them.
+
 ## 10 - 2026-08-30
 
 Space movements use the download/Confirm path again, then the other side is pointed at the mapped Space. v8–v9 wrote transfers the register never showed.

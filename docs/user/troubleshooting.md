@@ -32,7 +32,7 @@ Old rows stay put. New Imports follow the new mapping.
 
 Starling lists the same movement twice. This extension turns that into **one** Moneydance transfer: money leaves the current account and arrives on the Space. Both registers should show the same row.
 
-If Import said it added rows but the register is empty, install the current extension and Import again. You should get blue-dot downloads on the current account; Confirm or Merge them. The Space register should show the other side of the same transfer.
+If Import said it added rows but the register is empty, you were on a build that deleted those downloads before Moneydance could show them. Install the current extension and Import again. You should get blue-dot downloads on the current account; Confirm or Merge them. The Space register should show the other side of the same transfer.
 
 If an older import left a current-account row with nothing on the Space, or a standalone credit on the Space (payee often your name):
 

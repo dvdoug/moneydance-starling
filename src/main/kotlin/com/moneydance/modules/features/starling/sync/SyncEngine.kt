@@ -100,12 +100,6 @@ class SyncEngine(
             val fitId = FitIds.posted(FitIds.feedCategory(txn, source.categoryUid), txn.id)
             if (txn.id in promotedPostedIds) continue
             if (fitId in known) {
-                MdAccess.findByFitId(book, mdAccount, FitIds.PROTOCOL, fitId)?.let { parent ->
-                    if (parent.isNew && parent.originalOnlineTxn == null) {
-                        parent.isNew = false
-                        parent.syncItem()
-                    }
-                }
                 postedSkipped++
                 latestPosted = maxDate(latestPosted, txn.date)
                 continue
@@ -142,7 +136,6 @@ class SyncEngine(
             pendingRemoved++
         }
 
-        pruneStaleDownloads(mdAccount, known)
         finishDownloads(mdAccount)
         scheduleRelinks(mdAccount, relinks)
 
@@ -232,6 +225,7 @@ class SyncEngine(
 
     private fun finishDownloads(account: Account) {
         val downloaded = MdAccess.downloadedTxns(account) ?: return
+        MdNotify.log("${MdAccess.fullAccountName(account)} download list ${MdAccess.txnCount(downloaded)}")
         MdAccess.sortTxns(downloaded)
         MdAccess.syncList(downloaded)
         MdAccess.notifyDownloaded(downloaded)
