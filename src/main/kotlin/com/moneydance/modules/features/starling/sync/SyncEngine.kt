@@ -97,6 +97,9 @@ class SyncEngine(
             val fitId = FitIds.posted(FitIds.feedCategory(txn, source.categoryUid), txn.id)
             if (txn.id in promotedPostedIds) continue
             if (fitId in known) {
+                MdAccess.findByFitId(book, mdAccount, FitIds.PROTOCOL, fitId)?.let {
+                    MdAccess.revealOrphanNewTransfer(it)
+                }
                 postedSkipped++
                 latestPosted = maxDate(latestPosted, txn.date)
                 continue

@@ -367,6 +367,7 @@ public final class MdAccess {
             -1L,
             AbstractTxn.STATUS_UNRECONCILED
         );
+        parent.setEditingMode();
         double rate = CurrencyUtil.getRawRate(
             fromAccount.getCurrencyType(),
             toAccount.getCurrencyType(),
@@ -383,13 +384,25 @@ public final class MdAccess {
         );
         parent.addSplit(split);
         parent.setFiTxnId(OnlineTxn.PROTO_TYPE_OFX, fitId);
-        parent.setIsNew(true);
         parent.setTransferType(AbstractTxn.TRANSFER_TYPE_BANK);
+        parent.setIsNew(false);
         if (pending) {
             parent.setParameter("starling.pending", true);
         }
         TxnUtil.setRatesInTxn(parent);
-        parent.syncItem();
+        book.getTransactionSet().addNewTxn(parent);
         return parent;
+    }
+
+    /** v8 wrote transfers as isNew without ol.orig-txn, so the register hid them. */
+    public static void revealOrphanNewTransfer(ParentTxn txn) {
+        if (txn == null || !txn.isNew()) {
+            return;
+        }
+        if (txn.getOriginalOnlineTxn() != null) {
+            return;
+        }
+        txn.setIsNew(false);
+        txn.syncItem();
     }
 }

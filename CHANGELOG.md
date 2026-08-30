@@ -1,5 +1,9 @@
 # Changelog
 
+## 9 - 2026-08-30
+
+Space transfers appear in the register immediately. v8 saved them as unconfirmed without a download row, so they did not show.
+
 ## 8 - 2026-08-30
 
 Money moved between a mapped current account and a mapped Space is one Moneydance transfer, visible on both registers. If a matching transfer already exists, Import tags it instead of adding a second row.
