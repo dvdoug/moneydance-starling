@@ -10,7 +10,7 @@ The message names the missing ticks (for example `space:read`). You **cannot** a
 
 ## The table has accounts but few Spaces
 
-If **Add token** already succeeded, the required ticks are fine. You may have no live Spaces. Closed ones are marked **(archived)** after the first **Validating…**. **Refresh accounts** only updates what Starling lists as live, and keeps archived rows you already found.
+If **Add token** already succeeded, the required ticks are fine. You may have no live Spaces. Closed ones are marked **(archived)**. **Refresh accounts** updates what Starling lists as live and keeps archived rows already in the table.
 
 ## Import says up to date
 

@@ -16,7 +16,7 @@ Needs Moneydance 2024 or newer. Installing a newer download **replaces** the old
 2. Paste the long token into **Personal access token (PAT)**.
 3. Click **Add token**.
 
-The first save shows **Validating…** (permissions, then a one-time history read so older Spaces can appear). On success you get a labelled row such as *Douglas Wright (Personal)*.
+The first save shows **Validating…**. On success you get a labelled row such as *Douglas Wright (Personal)*.
 
 **Remove token** only forgets it in this Moneydance file.
 

@@ -42,8 +42,6 @@ Leave **Edit Financial**, **Transact Financial**, and **Edit Personal** entirely
 
 The token does **not** expire. Starling **cannot add ticks** to a token you already made. Wrong boxes means create a **new** token. If you miss a box, **Add token** in Moneydance will name it.
 
-`space:read` lists **active** Spaces. Closed ones can still show in Moneydance after the first **Validating…** when you add the token.
-
 ## 4. Copy the token once
 
 Copy it. Do not screenshot or email it. You will paste it into Moneydance next.
