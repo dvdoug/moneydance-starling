@@ -4,14 +4,14 @@ Instructions for AI coding agents working in this repository. Humans should star
 
 ## Current state (read this first)
 
-Shipped as **`module_build` 3** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.md](CHANGELOG.md) must stay in lockstep). First public build of the Starling importer.
+Shipped as **`module_build` 4** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.md](CHANGELOG.md) must stay in lockstep). First public build of the Starling importer.
 
 **Import path (do not regress):** write `OnlineTxn`s onto `account.getDownloadedTxns()`, then `MoneydanceGUI.showDownloadedTxns(account)` (`OnlineManager.processDownloadedTxns`). That is Moneydance’s OFX Confirm / Merge path (`ol.orig-txn`, blue dots). **Do not create `ParentTxn`s.**
 
 **What works now**
 
 - Settings: list of personal access tokens (PATs). **Add token** validates scopes, then walks that token’s history **once** (**Validating…**). Persist tokens as `starling.pat.{id}` with **both** `LocalStorage.put` and `cacheAuthentication`. Index in `starling.pats`. Never log a token.
-- Catalogue: first walk records `CATEGORY` counterparties from the main feed (archived Spaces). **Refresh accounts** only hits live `/accounts` + `/spaces` (+ `/savings-goals` if scoped) and stitches onto `starling.catalogue`. Missing from live list → **(archived)**; mapping kept.
+- Catalogue: first walk records `CATEGORY` counterparties from the main feed (archived Spaces). **Refresh accounts** only hits live `/accounts` + `/spaces` and stitches onto `starling.catalogue`. Missing from live list → **(archived)**; mapping kept. Never call `/savings-goals`.
 - Mapping table: Starling account / Space / pot → Moneydance account + **From** date. Saved as `starling.mappings`. **No Save mappings button.** Persist on **Import**, and on Close / title-bar X / Alt+F4 / Escape (`goneAway`), but only if accounts loaded this session.
 - **Import** and **import when this file opens** (checkbox, default **off**) share `SyncService`. HTTP off EDT; `showDownloadedTxns` + pending reconcile on EDT.
 - Progress: `MoneydanceGUI.setStatus("Starling: …", progress)` and Help → Console (`starling:` via `System.err` + `AppDebug.ALL`). Never log the PAT.

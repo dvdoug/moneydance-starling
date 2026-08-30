@@ -57,9 +57,7 @@ Lists accounts for this holder. Typical: `PRIMARY` “Personal” (GBP) plus `SA
 }
 ```
 
-Scope: `space:read`. Archived pots are **not** listed. We discover them from `CATEGORY` counterparties on the main feed during the first PAT walk.
-
-`GET /account/{accountUid}/savings-goals` (`savings-goal:read`) returns the same **active** goals. Optional. Does not return archived ids (404).
+Scope: `space:read`. Archived pots are **not** listed. We discover them from `CATEGORY` counterparties on the main feed during the first PAT walk. Do not call `/savings-goals` (`savings-goal:read`); it is the same active list and does not return archived ids.
 
 ### `GET /feed/account/{accountUid}/category/{categoryUid}/transactions-between`
 

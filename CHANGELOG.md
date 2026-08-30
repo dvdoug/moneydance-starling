@@ -1,5 +1,9 @@
 # Changelog
 
+## 4 - 2026-08-30
+
+Dropped the unused `savings-goal:read` API; `space:read` is enough.
+
 ## 3 - 2026-08-30
 
 Grouped mapping table (accounts, then Spaces). Unmapped savings pots fold into a mapped savings account. Date picker for From. Clearer setup and troubleshooting.

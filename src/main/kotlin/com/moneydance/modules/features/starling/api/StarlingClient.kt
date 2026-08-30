@@ -25,27 +25,12 @@ class StarlingClient(
 
     fun listAccounts(): List<StarlingAccount> = FeedParser.parseAccounts(get("/api/v2/accounts"))
 
-    fun listSpaces(accountUid: String, parentName: String): List<StarlingSpace> {
-        val fromSpaces = FeedParser.parseSpaces(
+    fun listSpaces(accountUid: String, parentName: String): List<StarlingSpace> =
+        FeedParser.parseSpaces(
             accountUid,
             parentName,
             get("/api/v2/account/$accountUid/spaces")
         )
-        val fromGoals = try {
-            FeedParser.parseSavingsGoals(
-                accountUid,
-                parentName,
-                get("/api/v2/account/$accountUid/savings-goals")
-            )
-        } catch (_: StarlingException.Forbidden) {
-            emptyList()
-        } catch (_: StarlingException.NotFound) {
-            emptyList()
-        }
-        val byUid = linkedMapOf<String, StarlingSpace>()
-        (fromSpaces + fromGoals).forEach { byUid[it.categoryUid] = it }
-        return byUid.values.toList()
-    }
 
     fun transactionsBetween(
         accountUid: String,

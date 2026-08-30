@@ -101,24 +101,6 @@ object FeedParser {
         return out
     }
 
-    fun parseSavingsGoals(accountUid: String, parentName: String, text: String): List<StarlingSpace> {
-        val root = parseJson(text).obj()
-        val list = root["savingsGoalList"]?.arr() ?: root["savingsGoals"]?.arr() ?: emptyList()
-        return list.mapNotNull { row ->
-            val o = row.obj()
-            val uid = o.str("savingsGoalUid")?.trim()?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
-            val state = o.str("state")?.uppercase().orEmpty()
-            StarlingSpace(
-                accountUid = accountUid,
-                categoryUid = uid,
-                name = o.str("name")?.trim()?.ifEmpty { null } ?: "Savings",
-                kind = SourceKind.SAVINGS,
-                archived = state == "ARCHIVED" || state == "ARCHIVING",
-                parentName = parentName
-            )
-        }
-    }
-
     fun parseHolderName(text: String): String =
         parseJson(text).obj().str("accountHolderName")?.trim().orEmpty()
 
