@@ -1,10 +1,59 @@
 # Contributing
 
-This is a personal project. Issues and PRs are welcome.
+## Before writing code
 
-- Follow **AGENTS.md**.
-- End-user help lives in [docs/user/](docs/user/README.md) (GitHub-rendered markdown).
-- `./gradlew test` before a PR.
-- Commit **and push** each iteration, including docs-only work.
-- Do not commit `userconfig/` tokens, keys, `lib/*.jar`, `scratch/`, or `*.mxt`.
-- User-facing copy: unofficial, not Starling Bank or Infinite Kind.
+[README.md](README.md) is a short pointer. End-user help lives in [docs/user/](docs/user/README.md) (GitHub-rendered markdown). Write those pages for a non-technical reader. Own the overall flow; link Starling’s Developer Portal for *their* screens instead of duplicating click-paths. Spell out **our** window (button names). If you add screenshots, put them in `docs/user/images/` and refresh them whenever the UI changes. Developers: read [AGENTS.md](AGENTS.md) (especially **Current state**) and [docs/product.md](docs/product.md). The Gradle project already exists. Do not re-scaffold the DevKit layout. Do not commit `docs/roadmap.md`, `docs/review-*.md`, or `docs/_local/` (gitignored scratch).
+
+## Conventions
+
+- Kotlin, package `com.moneydance.modules.features.starling`.
+- Java 17 bytecode, Kotlin 1.9 language/API, matching current Infinite Kind guidance.
+- Swing on the EDT; HTTP off it.
+- No hardcoded PATs. Personal API only.
+
+## Java / Kotlin toolchain
+
+You do not set `CLASSPATH`. You do not install a Kotlin SDK.
+
+A JDK is required only so the Gradle wrapper can run. This repo targets **Microsoft OpenJDK 21** (`winget install Microsoft.OpenJDK.21`). After that, `./gradlew` pulls the Kotlin compiler itself.
+
+Moneydance ships its own JRE; the extension runs inside that, not on whatever JDK compiled it.
+
+## Test data
+
+Prefer a throwaway Moneydance file. The owner may also alpha the main file after **File → Export Backup**. Agents must not request production data or PATs in git.
+
+Moneydance reopens the **last** file. After a throwaway session, **File → Open** the real dataset before closing if that is what they want next.
+
+The PAT goes in extension Settings only. Auto-import on file open is **off** until the user ticks **Import when this file opens**.
+
+## Installing a new build
+
+Moneydance copies the `.mxt` into `%USERPROFILE%\.moneydance\fmodules`. It does not watch `dist/`. After each Gradle build, drag `dist/starling.mxt` onto the Moneydance window (or **Extensions → Manage Extensions → Add from File…**) and Install. Same `id` replaces the previous build. Restarting without that step does not pick up new code.
+
+## Local secrets
+
+Drop DevKit jars into `lib/` as documented once the build exists. Generate signing keys with `gradlew genKeys`, or reuse the vendor 99 pair from moneydance-lunchflow. Those files are gitignored.
+
+Use a **throwaway** Moneydance data file and a PAT you can revoke.
+
+## Docs
+
+If you change behaviour, IDs, or commands, update `AGENTS.md` and the matching file under `docs/` in the same change. Keep `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` as pointers, not a second copy of the rules.
+
+Every shipped `module_build` bump must add 1–2 high-level lines to [CHANGELOG.md](CHANGELOG.md) (Keep a Changelog). Commit **and push** each iteration, including docs-only work; do not leave the tree uncommitted or only local.
+
+## GitHub Actions CI
+
+Moneydance is a desktop app. CI **cannot** open a data file or click Import. It runs `./gradlew test` (API parser, FITIDs, dates, settings, router) on every pull request and push.
+
+On **master** it also packages an **unsigned** `.mxt` (compiled classes + `meta_info.dict`).
+
+- **Workflow artifact** (Actions → run → Artifacts): convenient, expires in 90 days.
+- **GitHub Release** on tag `v{module_build}`: the lasting download. CI creates the tag and Release the first time that build number hits master; it will not move or replace an existing tag.
+
+Moneydance will warn that the signature is unrecognized until Infinite Kind counter-signs a store build. **Always package locally** with `gradlew test starling` (signed `dist/starling.mxt`) for the build you will install. CI’s unsigned Release is a public download, not a substitute for that local signed file.
+
+DevKit jars are not in git. CI (and a first clone) run `fetchMdJars`, which pulls `moneydance-dev.jar` / `extadmin.jar` from [moneydance_open](https://github.com/TheInfiniteKind/moneydance_open).
+
+Dependabot (`.github/dependabot.yml`) opens weekly PRs for GitHub Actions and Gradle plugins. Merge those when CI is green; they are not `module_build` bumps.

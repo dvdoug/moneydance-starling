@@ -22,7 +22,10 @@ gradle.properties.local
 /lib/moneydance.jar
 
 user.properties
-userconfig/
+userconfig/priv_key
+userconfig/pub_key
+userconfig/user.properties
+userconfig/*.pat
 
 .env
 .env.*

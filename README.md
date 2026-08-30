@@ -1,17 +1,34 @@
 # Starling Bank for Moneydance
 
-Unofficial [Moneydance](https://infinitekind.com/moneydance) extension that imports your Starling Bank transactions using a [personal access token](https://developer.starlingbank.com/). Not affiliated with Starling Bank or The Infinite Kind.
+An **unofficial** Moneydance extension by **Doug Wright**. It imports transactions from [Starling Bank](https://www.starlingbank.com/) into Moneydance using Starling’s personal API — the same job as downloading a CSV, without the monthly fee of an aggregator.
 
-## Use it
+**This is not a Starling Bank product.** The author is not affiliated with Starling Bank or The Infinite Kind (makers of Moneydance). You need your own Starling account and a personal access token from the [Developer Portal](https://developer.starlingbank.com/).
 
-1. Create a PAT in the Starling Developer Portal. Required permissions are listed in [docs/user/setup.md](docs/user/setup.md).
-2. In Moneydance, Extensions → Starling Bank. Paste the token. The first save reads your history once (progress bar) so archived Spaces can appear in the mapping table.
-3. Map accounts (and any Spaces you want as their own Moneydance accounts). Import.
+```text
+Your Starling account  →  Starling personal API  →  this extension  →  Moneydance
+```
 
-Pending card payments and upcoming Direct Debits show as `[PENDING]` until they settle.
+The extension never sends payments. It only reads accounts, Spaces, and transactions you already own.
 
-## Build
+For other banks (Amex, and so on) use the sibling [Lunch Flow extension](https://github.com/dvdoug/moneydance-lunchflow).
 
-JDK 21. `./gradlew test`. `./gradlew starling` builds a signed `dist/starling.mxt` if you have local signing keys (`userconfig/`).
+## Install and use
 
-See [AGENTS.md](AGENTS.md) if you are changing the code.
+Full instructions (token scopes, mapping, Import): **[docs/user](docs/user/README.md)**.
+
+Requires **Moneydance 2024** or newer. Download a build from [Releases](https://github.com/dvdoug/moneydance-starling/releases), then **Extensions → Manage Extensions → Add from File…**. You will see an unrecognized-signature warning until Infinite Kind list the extension.
+
+Take a **File → Export Backup** before the first import on a file you care about.
+
+## Changes and privacy
+
+- [CHANGELOG.md](CHANGELOG.md) — what each version changed
+- [SECURITY.md](SECURITY.md) — how the token is stored
+
+## Building from source
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Short version: JDK 21+, `gradlew starling` → `dist/starling.mxt`.
+
+## License
+
+[MIT](LICENSE), © Doug Wright. Moneydance is a trademark of The Infinite Kind. Starling Bank is a trademark of Starling Bank Limited. This extension is not affiliated with Starling Bank or The Infinite Kind.
