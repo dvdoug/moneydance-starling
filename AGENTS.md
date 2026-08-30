@@ -65,6 +65,7 @@ Do not rename the extension ID after the first public build. Infinite Kind treat
 - **Honor the mapping start date as the fetch floor for this run.** After a successful import, persist `syncStartDate = max(current start, lastPostedDate − 31 days)` so From only moves **forward**.
 - **Chunk `transactions-between`** at 180 days. Do not request 2019–now in one call.
 - **Help button** (**Setup guide**) opens [docs/user/setup.md](docs/user/setup.md) on GitHub. Keep that guide non-technical. Do not replace it with a bundled HTML viewer.
+- **End-user docs are for a released product.** [docs/user/](docs/user/README.md) (especially troubleshooting) is for a stranger who installed from GitHub Releases. Do not add this session’s QA bugs, “install the current extension”, FITID cleanup, or “older builds did X”. Those belong in **Current state**, Help → Console, or a gitignored scratch note. If a behaviour is the intended product, describe that — not how we got there.
 - **GUI on the EDT.** Network I/O and JSON parsing on a background thread (`SwingWorker`). Never block the Event Dispatch Thread on HTTP.
 - **Release listeners** on `md:file:closing` / `md:file:closed` and in `unload()`. Do not retain `AccountBook`, `Account`, or `AbstractTxn` references after the file closes.
 - **User-facing copy must say this is unofficial.** This extension is by Doug Wright. It is not Starling Bank, not Infinite Kind, and not affiliated with either. Reuse `Main.THIRD_PARTY_DISCLAIMER` (or the same wording) in the window, Help, and `module_desc`.

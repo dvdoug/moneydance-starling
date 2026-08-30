@@ -2,7 +2,7 @@
 
 ## Before writing code
 
-[README.md](README.md) is a short pointer. End-user help lives in [docs/user/](docs/user/README.md) (GitHub-rendered markdown). Write those pages for a non-technical reader. Own the overall flow; link Starling’s Developer Portal for *their* screens instead of duplicating click-paths. Spell out **our** window (button names). If you add screenshots, put them in `docs/user/images/` and refresh them whenever the UI changes. Developers: read [AGENTS.md](AGENTS.md) (especially **Current state**) and [docs/product.md](docs/product.md). The Gradle project already exists. Do not re-scaffold the DevKit layout. Do not commit `docs/roadmap.md`, `docs/review-*.md`, or `docs/_local/` (gitignored scratch).
+[README.md](README.md) is a short pointer. End-user help lives in [docs/user/](docs/user/README.md) (GitHub-rendered markdown). Write those pages for a non-technical reader who installed a release, not for in-progress QA. Own the overall flow; link Starling’s Developer Portal for *their* screens instead of duplicating click-paths. Spell out **our** window (button names). If you add screenshots, put them in `docs/user/images/` and refresh them whenever the UI changes. Developers: read [AGENTS.md](AGENTS.md) (especially **Current state**) and [docs/product.md](docs/product.md). The Gradle project already exists. Do not re-scaffold the DevKit layout. Do not commit `docs/roadmap.md`, `docs/review-*.md`, or `docs/_local/` (gitignored scratch).
 
 ## Conventions
 

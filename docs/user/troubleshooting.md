@@ -20,29 +20,19 @@ A savings account is separate from the current account. If the current account i
 
 That Space is **— not mapped —**. Map it to a subaccount if you want those spends there.
 
+## A transfer into a Space
+
+Money from the current account into a mapped Space is **one** Moneydance transfer: it leaves the current account and arrives on the Space. Confirm the current-account download as a transfer to that Space if the Category column is not already the Space account. Do not Confirm it as ordinary income or spending — the Space register would then not show it as coming from the current account.
+
+If only the Space is mapped, the credit lands there as a normal row.
+
 ## I changed Import into after importing
 
 Old rows stay put. New Imports follow the new mapping.
 
-## Pending, Merge, dates
+## Pending and Merge
 
-`[PENDING]` until it posts. Moneydance uses the UK settlement date (not UTC). If you Merged the pending row into a reminder, merge the settled download too. The reminder’s name stays. Already-confirmed rows keep the date they were given; delete an unconfirmed download and Import again to pick up a date fix.
-
-## A transfer into a Space does not show as coming from the current account
-
-Starling lists the same movement twice. This extension turns that into **one** Moneydance transfer: money leaves the current account and arrives on the Space. Both registers should show the same row.
-
-If Import said it added rows but the register is empty, you were on a build that deleted those downloads before Moneydance could show them. Install the current extension and Import again. You should get blue-dot downloads on the current account; Confirm or Merge them. The Space register should show the other side of the same transfer.
-
-If an older import left a current-account row with nothing on the Space, or a standalone credit on the Space (payee often your name):
-
-1. Install the current extension.
-2. Delete leftover Space-side standalone credits (blue-dot or already accepted).
-3. Keep original transfers that already link the two accounts (your “Set aside money…” lines).
-4. For a current-account row that is **not** already a transfer, either delete the unconfirmed download and Import again, or open it and set **Category** to the Space account (that is how Moneydance links the other side).
-5. Import again. Matching existing transfers are tagged, not duplicated.
-
-You do not need a FITID cleanup script unless a standalone credit was merged into a *different* existing transaction.
+`[PENDING]` until it posts. Moneydance uses the UK settlement date. If you Merged the pending row into a reminder, merge the settled download too. The reminder’s name stays.
 
 ## Wrong register or currency
 
