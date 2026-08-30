@@ -34,7 +34,8 @@ data class MappableSource(
     val currency: String,
     val kind: SourceKind,
     val archived: Boolean,
-    val accountType: String = ""
+    val accountType: String = "",
+    val createdAt: String? = null
 ) {
     val displayName: String
         get() {

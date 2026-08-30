@@ -1,5 +1,9 @@
 # Changelog
 
+## 6 - 2026-08-30
+
+Honour Starling rate limits: slower request spacing, retry on HTTP 429, and do not fetch years before the account opened.
+
 ## 5 - 2026-08-30
 
 Mapping hint and docs say Space, not pot. Moving money into an unmapped Spending Space is not imported as spending.

@@ -33,7 +33,8 @@ object Catalogue {
                     currency = acc.currency,
                     kind = SourceKind.MAIN,
                     archived = false,
-                    accountType = acc.accountType
+                    accountType = acc.accountType,
+                    createdAt = acc.createdAt
                 )
             )
         }
@@ -55,7 +56,8 @@ object Catalogue {
                     currency = acc?.currency ?: "GBP",
                     kind = live?.kind ?: saved?.kind ?: SourceKind.SAVINGS,
                     archived = archived,
-                    accountType = acc?.accountType.orEmpty()
+                    accountType = acc?.accountType.orEmpty(),
+                    createdAt = acc?.createdAt
                 )
             )
         }

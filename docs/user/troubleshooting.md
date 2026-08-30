@@ -34,7 +34,7 @@ Old rows stay put. New Imports follow the new mapping.
 
 ## Starling asked us to slow down
 
-Personal tokens can only call so often. Wait a minute and try again.
+Personal tokens are limited to a few requests a second (and 1000 a day). A long first import waits and retries. If it still fails, wait a minute and Import again. Do not click Import repeatedly.
 
 ## The yellow Download button in the register
 

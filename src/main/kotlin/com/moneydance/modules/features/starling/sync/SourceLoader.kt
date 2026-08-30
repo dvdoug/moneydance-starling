@@ -63,11 +63,9 @@ object SourceLoader {
     ): LoadedSources {
         val client = StarlingClient(token)
         onProgress("checking token", 0.05)
-        client.checkRequiredAccess()
-        val holder = client.holderInfo()
+        val (holder, accounts) = client.checkRequiredAccess()
         val label = labelFor(holder)
         onProgress("listing accounts", 0.1)
-        val accounts = client.listAccounts()
         val liveSpaces = mutableListOf<com.moneydance.modules.features.starling.api.StarlingSpace>()
         val discovered = mutableListOf<CatalogueEntry>()
         val today = LocalDate.now()

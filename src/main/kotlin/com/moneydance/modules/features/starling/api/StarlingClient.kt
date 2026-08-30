@@ -7,11 +7,10 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 
-
 class StarlingClient(
     private val token: String,
     private val opener: (URI) -> HttpURLConnection = defaultOpener,
-    private val sleeper: (Long) -> Unit = { ms -> Thread.sleep(ms) }
+    private val sleeper: (Long) -> Unit = { ms -> if (ms > 0) Thread.sleep(ms) }
 ) {
     fun holderInfo(): HolderInfo {
         val type = FeedParser.parseHolderType(get("/api/v2/account-holder"))
@@ -57,63 +56,76 @@ class StarlingClient(
         val trimmed = token.trim()
         if (trimmed.isEmpty()) throw StarlingException.MissingToken()
         val url = buildUrl(path, query)
-        sleeper(MIN_GAP_MS)
-        val conn = opener(url)
-        try {
-            conn.requestMethod = "GET"
-            conn.connectTimeout = 30_000
-            conn.readTimeout = 90_000
-            conn.setRequestProperty("Authorization", "Bearer $trimmed")
-            conn.setRequestProperty("Accept", "application/json")
-            conn.setRequestProperty("User-Agent", USER_AGENT)
-            val status = conn.responseCode
-            val body = readBody(conn, status)
-            if (status in 200..299) return body
-            throw mapStatus(status, body)
-        } catch (e: StarlingException) {
-            throw e
-        } catch (e: IOException) {
-            throw StarlingException.Network(e)
-        } finally {
-            conn.disconnect()
+        var attempt = 0
+        while (true) {
+            throttle()
+            val conn = opener(url)
+            try {
+                conn.requestMethod = "GET"
+                conn.connectTimeout = 30_000
+                conn.readTimeout = 90_000
+                conn.setRequestProperty("Authorization", "Bearer $trimmed")
+                conn.setRequestProperty("Accept", "application/json")
+                conn.setRequestProperty("User-Agent", USER_AGENT)
+                val status = conn.responseCode
+                val body = readBody(conn, status)
+                if (status in 200..299) return body
+                if (status == 429 && attempt < MAX_RETRIES) {
+                    val wait = retryAfterMs(conn, attempt)
+                    sleeper(wait)
+                    attempt++
+                    continue
+                }
+                throw mapStatus(status, body)
+            } catch (e: StarlingException) {
+                throw e
+            } catch (e: IOException) {
+                throw StarlingException.Network(e)
+            } finally {
+                conn.disconnect()
+            }
         }
     }
 
-    fun checkRequiredAccess() {
+    fun checkRequiredAccess(): Pair<HolderInfo, List<StarlingAccount>> {
         val missing = linkedSetOf<String>()
-        try {
+        val accounts = try {
             listAccounts()
         } catch (e: StarlingException.Forbidden) {
-            missing += e.missingScopes.ifEmpty { listOf("account:read", "account-list:read") }
-            if (missing.isNotEmpty()) throw StarlingException.Forbidden(missing.toList())
+            throw StarlingException.Forbidden(
+                e.missingScopes.ifEmpty { listOf("account:read", "account-list:read") }
+            )
         }
-        try {
+        val holder = try {
             holderInfo()
         } catch (e: StarlingException.Forbidden) {
             missing += e.missingScopes.ifEmpty {
                 listOf("account-holder-name:read", "account-holder-type:read", "customer:read")
             }
-        }
-        val accounts = try {
-            listAccounts()
-        } catch (_: StarlingException) {
-            emptyList()
+            HolderInfo("", "")
         }
         val first = accounts.firstOrNull()
         if (first != null) {
             try {
-                get("/api/v2/account/${first.accountUid}/spaces")
+                listSpaces(first.accountUid, first.name)
             } catch (e: StarlingException.Forbidden) {
                 missing += e.missingScopes.ifEmpty { listOf("space:read") }
             }
             try {
                 val today = LocalDate.now()
-                transactionsBetween(first.accountUid, first.defaultCategory, today.minusDays(2), today)
+                get(
+                    "/api/v2/feed/account/${first.accountUid}/category/${first.defaultCategory}/transactions-between",
+                    listOf(
+                        "minTransactionTimestamp" to formatTs(today.minusDays(2)),
+                        "maxTransactionTimestamp" to formatTs(today, endOfDay = true)
+                    )
+                )
             } catch (e: StarlingException.Forbidden) {
                 missing += e.missingScopes.ifEmpty { listOf("transaction:read") }
             }
         }
         if (missing.isNotEmpty()) throw StarlingException.Forbidden(missing.toList())
+        return holder to accounts
     }
 
     private fun mapStatus(status: Int, body: String): StarlingException = when (status) {
@@ -148,15 +160,56 @@ class StarlingClient(
     companion object {
         const val BASE: String = "https://api.starlingbank.com"
         const val USER_AGENT: String = "moneydance-starling/1"
-        const val MIN_GAP_MS: Long = 220
+        /** Starling PAT limit is 5/s; stay well under that. */
+        const val MIN_GAP_MS: Long = 400
+        const val MAX_RETRIES: Int = 6
         val defaultOpener: (URI) -> HttpURLConnection = { uri ->
             uri.toURL().openConnection() as HttpURLConnection
         }
+
+        private val lock = Any()
+        private var lastRequestAt: Long = 0L
+
+        fun throttle(sleeper: (Long) -> Unit) {
+            synchronized(lock) {
+                val now = System.nanoTime()
+                val elapsedMs = (now - lastRequestAt) / 1_000_000L
+                if (lastRequestAt != 0L && elapsedMs < MIN_GAP_MS) {
+                    sleeper(MIN_GAP_MS - elapsedMs)
+                }
+                lastRequestAt = System.nanoTime()
+            }
+        }
+
+        fun retryAfterMs(conn: HttpURLConnection, attempt: Int): Long {
+            val header = conn.getHeaderField("Retry-After")?.trim()
+            val fromHeader = header?.toLongOrNull()?.times(1000L)
+            if (fromHeader != null && fromHeader > 0) return fromHeader.coerceAtMost(120_000L)
+            val backoff = 2_000L * (1L shl attempt.coerceAtMost(5))
+            return backoff.coerceAtMost(60_000L)
+        }
+    }
+
+    private fun throttle() {
+        throttle(sleeper)
     }
 }
 
 object DateChunks {
     const val MAX_DAYS: Long = 180
+    val EARLIEST: LocalDate = LocalDate.of(2014, 1, 1)
+
+    fun notBeforeOpened(requested: LocalDate, createdAt: String?): LocalDate {
+        val opened = createdAt?.take(10)?.let {
+            try {
+                LocalDate.parse(it)
+            } catch (_: Exception) {
+                null
+            }
+        } ?: EARLIEST
+        val floor = if (opened.isBefore(EARLIEST)) EARLIEST else opened
+        return if (requested.isBefore(floor)) floor else requested
+    }
 
     fun windows(from: LocalDate, to: LocalDate): List<Pair<LocalDate, LocalDate>> {
         var start = from
@@ -170,5 +223,3 @@ object DateChunks {
         return out
     }
 }
-
-

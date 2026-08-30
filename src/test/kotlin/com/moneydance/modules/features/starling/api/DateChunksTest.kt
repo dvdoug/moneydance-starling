@@ -19,6 +19,15 @@ class DateChunksTest {
     }
 
     @Test
+    fun clampsBeforeAccountOpened() {
+        val opened = "2019-03-11T16:50:01.000Z"
+        assertEquals(
+            LocalDate.of(2019, 3, 11),
+            DateChunks.notBeforeOpened(LocalDate.of(2000, 1, 1), opened)
+        )
+    }
+
+    @Test
     fun singleDay() {
         val d = LocalDate.of(2026, 1, 1)
         assertEquals(listOf(d to d), DateChunks.windows(d, d))

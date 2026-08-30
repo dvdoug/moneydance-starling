@@ -75,14 +75,20 @@ object SyncService {
                     val token = tokenByAccount[src.accountUid] ?: tokens.first().second
                     val client = StarlingClient(token)
                     val mapping = TxnRouter.mappingForFetch(src, sources, mapped)
-                    val fromIso = mapping?.let { SyncEngine.fetchFromDate(it) } ?: mapped.minOfOrNull {
-                        SyncEngine.fetchFromDate(it) ?: "2000-01-01"
-                    }
-                    val from = try {
-                        LocalDate.parse((fromIso ?: today.minusMonths(1).toString()).take(10))
+                    val fromIso = mapping?.let { SyncEngine.fetchFromDate(it) }
+                    val parsedFrom = try {
+                        if (fromIso.isNullOrBlank()) {
+                            com.moneydance.modules.features.starling.api.DateChunks.EARLIEST
+                        } else {
+                            LocalDate.parse(fromIso.take(10))
+                        }
                     } catch (_: Exception) {
-                        today.minusMonths(1)
+                        com.moneydance.modules.features.starling.api.DateChunks.EARLIEST
                     }
+                    val from = com.moneydance.modules.features.starling.api.DateChunks.notBeforeOpened(
+                        parsedFrom,
+                        src.createdAt
+                    )
                     publish(Progress("fetching ${src.name}", (index + 0.35) / feedsToFetch.size.coerceAtLeast(1)))
                     try {
                         val txns = client.transactionsBetween(src.accountUid, src.categoryUid, from, today)
