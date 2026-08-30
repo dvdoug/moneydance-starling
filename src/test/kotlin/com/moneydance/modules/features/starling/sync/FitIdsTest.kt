@@ -16,4 +16,29 @@ class FitIdsTest {
         assertTrue(FitIds.isOurs(posted))
         assertTrue(FitIds.isPending(pending))
     }
+
+    @Test
+    fun pendingLabelIsDisplayOnly() {
+        assertEquals("Tesco", FitIds.stripPendingLabel("Tesco"))
+        assertEquals("Tesco", FitIds.stripPendingLabel("[PENDING] Tesco"))
+        assertEquals("[PENDING] Tesco", FitIds.withPendingLabel("Tesco"))
+        assertEquals("[PENDING] Tesco", FitIds.withPendingLabel("[PENDING] Tesco"))
+        assertEquals("ol.orig-payee", FitIds.ORIG_PAYEE_TAG)
+    }
+
+    @Test
+    fun settledDescriptionKeepsConfirmedPayee() {
+        assertEquals(
+            "Tesco",
+            FitIds.settledDescription("[PENDING] Tesco", "TESCO STORES 123", alreadyConfirmed = true)
+        )
+        assertEquals(
+            "TESCO STORES 123",
+            FitIds.settledDescription("[PENDING] Tesco", "TESCO STORES 123", alreadyConfirmed = false)
+        )
+        assertEquals(
+            "Waitrose",
+            FitIds.settledDescription("Waitrose", "WAITROSE 2844", alreadyConfirmed = true)
+        )
+    }
 }

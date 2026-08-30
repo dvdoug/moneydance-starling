@@ -75,7 +75,8 @@ object SyncService {
                     val token = tokenByAccount[src.accountUid] ?: tokens.first().second
                     val client = StarlingClient(token)
                     val mapping = TxnRouter.mappingForFetch(src, sources, mapped)
-                    val fromIso = mapping?.let { SyncEngine.fetchFromDate(it) }
+                    val oldestPending = mapping?.let { SyncEngine.oldestOpenPendingDate(book, it) }
+                    val fromIso = mapping?.let { SyncEngine.fetchFromDate(it, oldestPending) }
                     val parsedFrom = try {
                         if (fromIso.isNullOrBlank()) {
                             com.moneydance.modules.features.starling.api.DateChunks.EARLIEST
@@ -169,7 +170,11 @@ object SyncService {
             )
             val named = item.mapping.withSource(item.source)
             updated.add(
-                if (result.error == null) named.afterSuccessfulImport(result.lastPostedDate) else named
+                if (result.error == null) {
+                    named.afterSuccessfulImport(result.lastPostedDate, result.oldestPendingDate)
+                } else {
+                    named
+                }
             )
             results.add(result)
         }

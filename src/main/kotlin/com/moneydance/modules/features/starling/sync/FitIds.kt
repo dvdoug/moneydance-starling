@@ -9,6 +9,8 @@ object FitIds {
     const val PREFIX_POSTED: String = "starling:"
     const val PREFIX_PENDING: String = "starling:pending:"
     const val PENDING_LABEL: String = "[PENDING] "
+    /** Moneydance similar-payee tag. Must not include [PENDING] — the matcher is prefix-based. */
+    const val ORIG_PAYEE_TAG: String = "ol.orig-payee"
 
     fun posted(categoryUid: String, txnId: String): String = "$PREFIX_POSTED$categoryUid:$txnId"
 
@@ -26,5 +28,15 @@ object FitIds {
     fun isPending(fitId: String?): Boolean {
         val v = fitId ?: return false
         return v.startsWith(PREFIX_PENDING)
+    }
+
+    fun stripPendingLabel(text: String): String = text.removePrefix(PENDING_LABEL)
+
+    fun withPendingLabel(text: String): String = PENDING_LABEL + stripPendingLabel(text)
+
+    /** Confirmed rows keep the user's Description minus our label. Unconfirmed take the settled payee. */
+    fun settledDescription(current: String, postedPayee: String, alreadyConfirmed: Boolean): String {
+        if (!alreadyConfirmed) return postedPayee
+        return stripPendingLabel(current).ifBlank { postedPayee }
     }
 }

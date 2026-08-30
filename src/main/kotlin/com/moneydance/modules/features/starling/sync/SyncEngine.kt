@@ -19,6 +19,7 @@ data class AccountSyncResult(
     val pendingPromoted: Int = 0,
     val pendingPayees: List<String> = emptyList(),
     val lastPostedDate: String? = null,
+    val oldestPendingDate: String? = null,
     val error: String? = null,
     val otherSideSourceIds: List<String> = emptyList()
 )
@@ -49,19 +50,22 @@ class SyncEngine(
 
         val known = collectRegisterFitIds(mdAccount)
         pruneStaleDownloads(mdAccount, known)
+        stripPendingFromDownloads(mdAccount)
         val mappedIds = mappings.filter { it.moneydanceAccountUuid.isNotBlank() }.map { it.sourceId }.toSet()
         val mappingBySource = mappings.associateBy { it.sourceId }
         val relinks = mutableListOf<PendingRelink>()
         val pendingLf = txns.filter { it.isPending }
         val postedLf = txns.filter { !it.isPending && it.id.isNotBlank() }
 
-        val pendingRegister = mutableMapOf<String, ParentTxn>()
+        val ourPending = linkedMapOf<String, ParentTxn>()
         for (txn in MdAccess.txnsForAccount(book, mdAccount)) {
             if (txn !is ParentTxn) continue
             if (!MdAccess.sameAccount(MdAccess.accountOf(txn), mdAccount)) continue
-            if (!MdAccess.isNew(txn)) continue
             val id = MdAccess.registerFiTxnId(txn, FitIds.PROTOCOL)
-            if (FitIds.isPending(id) && id != null) pendingRegister[id] = txn
+            if (FitIds.isOurs(id) || FitIds.isPending(id)) {
+                sanitizeOrigPayee(txn)
+            }
+            if (FitIds.isPending(id) && id != null) ourPending[id] = txn
         }
 
         val desiredPending = linkedMapOf<String, BankTxn>()
@@ -72,8 +76,8 @@ class SyncEngine(
         val newPosted = postedLf.filter {
             FitIds.posted(FitIds.feedCategory(it, source.categoryUid), it.id) !in known
         }
-        val dropped = pendingRegister.keys.filter { it !in desiredPending }.mapNotNull { key ->
-            val snap = snapshotFromParent(mdAccount, pendingRegister[key]!!) ?: return@mapNotNull null
+        val dropped = ourPending.filterKeys { it !in desiredPending }.mapNotNull { (key, parent) ->
+            val snap = snapshotFromParent(mdAccount, parent) ?: return@mapNotNull null
             key to snap
         }
         val promotions = PendingMatch.uniquePairs(dropped, newPosted)
@@ -89,10 +93,21 @@ class SyncEngine(
         var latestPosted: String? = mapping.lastPostedDate
 
         for (pair in promotions) {
-            val existing = pendingRegister.remove(pair.pendingKey) ?: continue
+            val existing = ourPending.remove(pair.pendingKey) ?: continue
             val fitId = FitIds.posted(FitIds.feedCategory(pair.posted, source.categoryUid), pair.posted.id)
-            MdAccess.setDescription(existing, pair.posted.payee())
-            MdAccess.setDateInt(existing, isoToDateInt(pair.posted.date))
+            val confirmed = !MdAccess.isNew(existing)
+            MdAccess.setDescription(
+                existing,
+                FitIds.settledDescription(
+                    MdAccess.getDescription(existing).orEmpty(),
+                    pair.posted.payee(),
+                    confirmed
+                )
+            )
+            if (!confirmed) {
+                MdAccess.setDateInt(existing, isoToDateInt(pair.posted.date))
+            }
+            sanitizeOrigPayee(existing)
             MdAccess.clearPendingFlag(existing)
             MdAccess.setRegisterFitId(existing, fitId)
             known.add(fitId)
@@ -118,14 +133,10 @@ class SyncEngine(
         }
 
         for ((key, txn) in desiredPending) {
-            val existing = pendingRegister.remove(key)
+            val existing = ourPending.remove(key)
             if (existing != null) {
-                labelRegisterPending(existing, txn.payee())
                 pendingUpdated++
             } else if (key in known) {
-                MdAccess.findByFitId(book, mdAccount, FitIds.PROTOCOL, key)?.let {
-                    labelRegisterPending(it, txn.payee())
-                }
                 pendingUpdated++
             } else {
                 addPostedOrTransfer(mdAccount, source, txn, key, pending = true, sources, mappedIds, mappingBySource, relinks)
@@ -134,7 +145,7 @@ class SyncEngine(
             }
         }
 
-        for ((key, existing) in pendingRegister) {
+        for ((key, existing) in ourPending) {
             if (key in promotedPendingKeys) continue
             MdAccess.deleteTxn(existing)
             pendingRemoved++
@@ -142,6 +153,7 @@ class SyncEngine(
 
         finishDownloads(mdAccount)
         scheduleRelinks(mdAccount, relinks)
+        schedulePendingLabels(mdAccount, desiredPending)
 
         return AccountSyncResult(
             postedAdded = postedAdded,
@@ -151,6 +163,7 @@ class SyncEngine(
             pendingRemoved = pendingRemoved,
             pendingPromoted = pendingPromoted,
             lastPostedDate = latestPosted,
+            oldestPendingDate = oldestOpenPendingDate(book, mapping),
             otherSideSourceIds = relinks.map { it.otherSourceId }
         )
     }
@@ -217,7 +230,7 @@ class SyncEngine(
     }
 
     private fun addDownloadTxn(account: Account, txn: BankTxn, fitId: String, pending: Boolean) {
-        val payee = if (pending) FitIds.PENDING_LABEL + txn.payee() else txn.payee()
+        val payee = txn.payee()
         MdAccess.addDownload(
             account,
             isoToDateInt(txn.date),
@@ -240,6 +253,34 @@ class SyncEngine(
         processDownloaded(account)
     }
 
+    private fun schedulePendingLabels(mdAccount: Account, desiredPending: Map<String, BankTxn>) {
+        if (desiredPending.isEmpty()) return
+        SwingUtilities.invokeLater {
+            SwingUtilities.invokeLater {
+                for ((key, txn) in desiredPending) {
+                    val parent = MdAccess.findByFitId(book, mdAccount, FitIds.PROTOCOL, key) ?: continue
+                    labelRegisterPending(parent, txn.payee())
+                }
+            }
+        }
+    }
+
+    private fun stripPendingFromDownloads(account: Account) {
+        val downloaded = MdAccess.downloadedTxns(account) ?: return
+        var changed = false
+        for (i in 0 until MdAccess.txnCount(downloaded)) {
+            val row = MdAccess.txnAt(downloaded, i) ?: continue
+            val name = MdAccess.getName(row) ?: continue
+            if (!name.startsWith(FitIds.PENDING_LABEL)) continue
+            val clean = FitIds.stripPendingLabel(name)
+            MdAccess.setName(row, clean)
+            MdAccess.setMerchantName(row, clean)
+            changed = true
+        }
+        if (!changed) return
+        MdAccess.syncList(downloaded)
+    }
+
     private fun pruneStaleDownloads(account: Account, registerIds: Set<String>) {
         val downloaded = MdAccess.downloadedTxns(account) ?: return
         val toRemove = mutableListOf<com.infinitekind.moneydance.model.OnlineTxn>()
@@ -258,10 +299,19 @@ class SyncEngine(
 
     private fun labelRegisterPending(txn: ParentTxn, payee: String) {
         if (!MdAccess.isNew(txn)) return
+        sanitizeOrigPayee(txn)
         val current = MdAccess.getDescription(txn).orEmpty()
-        if (current.startsWith(FitIds.PENDING_LABEL)) return
-        MdAccess.setDescription(txn, FitIds.PENDING_LABEL + current.ifBlank { payee })
+        if (!current.startsWith(FitIds.PENDING_LABEL)) {
+            MdAccess.setDescription(txn, FitIds.withPendingLabel(current.ifBlank { payee }))
+        }
         txn.setParameter(FitIds.PARAM_PENDING, true)
+        txn.syncItem()
+    }
+
+    private fun sanitizeOrigPayee(txn: ParentTxn) {
+        val orig = txn.getParameter(FitIds.ORIG_PAYEE_TAG, "") ?: return
+        if (!orig.startsWith(FitIds.PENDING_LABEL)) return
+        txn.setParameter(FitIds.ORIG_PAYEE_TAG, FitIds.stripPendingLabel(orig))
         txn.syncItem()
     }
 
@@ -277,7 +327,7 @@ class SyncEngine(
     }
 
     private fun snapshotFromParent(mdAccount: Account, parent: ParentTxn): BankTxn? {
-        val desc = MdAccess.getDescription(parent)?.removePrefix(FitIds.PENDING_LABEL)?.trim().orEmpty()
+        val desc = FitIds.stripPendingLabel(MdAccess.getDescription(parent).orEmpty()).trim()
         return BankTxn(
             id = "",
             categoryUid = "",
@@ -295,10 +345,20 @@ class SyncEngine(
     }
 
     companion object {
-        fun fetchFromDate(mapping: AccountMapping): String? {
-            mapping.syncStartDate?.takeIf { it.isNotBlank() }?.let { return it }
-            val last = mapping.lastPostedDate?.takeIf { it.isNotBlank() } ?: return null
-            return AccountMapping.nextStartAfter(last)
+        fun fetchFromDate(mapping: AccountMapping, oldestPending: String? = null): String? =
+            AccountMapping.fetchFromDate(mapping.syncStartDate, mapping.lastPostedDate, oldestPending)
+
+        fun oldestOpenPendingDate(book: AccountBook, mapping: AccountMapping): String? {
+            val account = book.getAccountByUUID(mapping.moneydanceAccountUuid) ?: return null
+            var oldest: Int? = null
+            for (txn in MdAccess.txnsForAccount(book, account)) {
+                if (txn !is ParentTxn) continue
+                if (!MdAccess.sameAccount(MdAccess.accountOf(txn), account)) continue
+                if (!FitIds.isPending(MdAccess.registerFiTxnId(txn, FitIds.PROTOCOL))) continue
+                val dateInt = MdAccess.getDateInt(txn)
+                if (oldest == null || dateInt < oldest) oldest = dateInt
+            }
+            return oldest?.let { dateIntToIso(it) }
         }
 
         fun isoToDateInt(iso: String): Int {

@@ -82,17 +82,13 @@ Hidden metadata (not user Keywords):
 | `starling.pending` = `true` | `ParentTxn.setParameter` | Cheap filter |
 | `OnlineTxn.setPending(true)` | downloaded row | Staging flag |
 
-Pending set-reconcile applies **only to unconfirmed (`isNew`) register `ParentTxn`s we tagged** with `starling:pending:`. Never delete a confirmed register txn.
-
-Pending → posted, still unconfirmed, **unique** match (exact amount, merchant case-insensitive, date within 7 days, 1:1): retarget that parent to the posted FITID, clear `starling.pending`, take settled payee. Ambiguous or amount-changed: `deleteItem` the unconfirmed pending parent and add a new posted download.
-
-If the user confirms a pending hold, we leave that register txn alone. The later posted row may show as another blue dot for them to merge.
+Pending set-reconcile applies to **our** `starling:pending:` register rows, including after the user confirmed the blue dot. Unique pending→posted match (exact amount, merchant, date within 7 days) updates that parent in place (posted FITID, clear `starling.pending`, drop `[PENDING] `). If it leaves pending **without** a unique match (amount changed, ambiguous, vanished): `deleteItem` that parent even if confirmed, then add posted as a download when we have one. Never delete reminder/typed rows or posted `starling:` FITIDs.
 
 ## First import window
 
-Per mapping, **sync start date** (`YYYY-MM-DD`). Default: first day of the current month. Blank = all history we can fetch **for this run** (chunked). After a successful import, set `syncStartDate = max(current start, lastPostedDate − 31 days)` so we only move From **forward**. Typing an older From and clicking Import still backfills; then the date walks forward again.
+Per mapping, **sync start date** (`YYYY-MM-DD`). Default: first day of the current month. Blank = all history we can fetch **for this run** (chunked). Fetch from = min(From, lastPosted − 7 days, oldest open `starling:pending:` date − 1 day). Seven days covers late posted clearing (timezone, weekend, holiday), not card-auth life; live holds keep the window open. After a successful import, persist `syncStartDate = max(current From, lastPosted − 7)` so From only moves **forward**. A long-lived hold extends the **fetch**, not the saved From.
 
-Unconfirmed pending downloaded rows use a `[PENDING] ` name prefix. Hidden FITID / `starling.pending` remain the source of truth. The prefix is stripped on promote to posted **only if the row is still unconfirmed**.
+Unconfirmed pending rows get a `[PENDING] ` **Description** prefix after `showDownloadedTxns`. `OnlineTxn.setName` and `ol.orig-payee` stay the raw merchant. Hidden FITID / `starling.pending` remain the source of truth. Description prefix is stripped on promote to posted; a leftover `[PENDING] ` on `ol.orig-payee` is stripped on our FITIDs at import.
 
 Currency: if Starling `currency` differs from the Moneydance account’s `CurrencyType.idString`, skip that mapping (hard error).
 
@@ -110,7 +106,7 @@ Catalogue: first PAT save walks the main category from `createdAt` in 180-day ch
 ## Sync algorithm
 
 1. HTTP off the EDT (`SyncService` / `SwingWorker`). Apply download-list writes and `showDownloadedTxns` on the EDT.
-2. For each relevant category, `GET .../transactions-between` in 180-day windows (`from` = mapping start, `to` = today).
+2. For each relevant category, `GET .../transactions-between` in 180-day windows (`to` = today; `from` = min of mapping start, last posted − 7, oldest open hold − 1).
 3. Route each item; skip FITIDs still on **live register** `ParentTxn`s on the destination account. Prune download-list rows whose FITID is already on the register.
 4. Posted: skip if FITID known; else `downloaded.newTxn()`, fill, `STATUS_NEW`.
 5. Pending (`PENDING`, `UPCOMING`, `RETRYING`): set-reconcile; promote or remove as above; else add a NEW download.

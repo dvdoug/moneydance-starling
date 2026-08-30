@@ -1,5 +1,9 @@
 # Changelog
 
+## 14 - 2026-08-30
+
+Pending holds keep the merchant for category matching; Confirm no longer freezes them. Lookback is last posted minus 7 days, or the oldest open hold. Extension icon is Starling’s site mark.
+
 ## 13 - 2026-08-30
 
 A current-account ↔ Space transfer is counted on both mapping rows. Import status sits under the table instead of a thin strip in the header.

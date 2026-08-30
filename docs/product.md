@@ -32,9 +32,9 @@ Ship an unofficial Moneydance extension, authored by **Doug Wright**, that is **
 3. In Moneydance: install the extension, open **Extensions → Starling Bank**.
 4. Paste token → **Add token**. On success we **validate scopes**, then walk history once (**Validating…**) so archived Spaces appear in the table.
 5. Map each Starling row to a Moneydance **bank** account (including subaccounts you already created). Choose **— not mapped —** to skip that Space. Default for the current account is statement-shaped: Spending Space merchants land on the parent; Easy Saver is a **different** Starling account, so money sent there still leaves the current account unless that Space is mapped.
-6. Choose a **From** date (default: first of the current month). After a successful import, From becomes `max(current From, last posted − 31 days)` — it never moves earlier than you set.
-7. **Import**. Mappings also save when the window closes. New rows appear as **unconfirmed downloaded transactions** (solid blue dot). Confirm or merge them in the register the same way as OFX. Pending holds are `[PENDING]` until they post or vanish.
-8. Later imports (including auto on open) fetch that 31-day overlap window and **always refresh the current pending set**. FITIDs skip anything already in the register. **Refresh accounts** does **not** re-walk all history.
+6. Choose a **From** date (default: first of the current month). After a successful import, From becomes `max(current From, last posted − 7 days)` — it never moves earlier than you set. Fetch still looks back to an open hold if that is earlier.
+7. **Import**. Mappings also save when the window closes. New rows appear as **unconfirmed downloaded transactions** (solid blue dot). Confirm or merge them in the register the same way as a file from your bank. Pending holds are `[PENDING]` until they post or vanish.
+8. Later imports (including auto on open) fetch last posted − 7 days (or the oldest open hold) and **always refresh the current pending set**. FITIDs skip anything already in the register. **Refresh accounts** does **not** re-walk all history.
 
 ## Success criteria
 

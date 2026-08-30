@@ -52,7 +52,7 @@ There is no Starling “destination catalog” to list in. Users create a PAT in
 - [x] Account mapping + From date (rolls forward after success)
 - [x] Idempotent import (FITID skip; second import of the same window adds no extra blue dots)
 - [x] Errors a non-developer can act on (status bar + window + console)
-- [x] Extension icon (placeholder; replace before listing)
+- [x] Extension icon (Starling site mark)
 - [x] Marketplace blurb (`module_desc`) / LICENSE
 - [x] No secrets in the repo, the MXT, or logs
 - [ ] Tested on current Moneydance Windows (in progress) and at least one of macOS/Linux before Infinite Kind review
