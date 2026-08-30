@@ -1,4 +1,5 @@
-# Moneybot: Window → Show Moneybot Console → Open Script → Run
+# -*- coding: utf-8 -*-
+# Moneybot: Window -> Show Moneybot Console -> Open Script -> Run
 # Read-only. Lists Starling FITIDs, hidden isNew rows, and download queues.
 
 from com.infinitekind.moneydance.model import ParentTxn, OnlineTxn

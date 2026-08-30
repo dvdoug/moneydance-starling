@@ -1,4 +1,5 @@
-# Moneybot: Window → Show Moneybot Console → Open Script → Run
+# -*- coding: utf-8 -*-
+# Moneybot: Window -> Show Moneybot Console -> Open Script -> Run
 # Deletes v8-style hidden Starling transfers: isNew, starling FITID, no ol.orig-txn.
 # Does not touch confirmed register transfers or ordinary downloads.
 #
@@ -32,7 +33,7 @@ for t in victims:
     )
 
 if DRY_RUN:
-    print "DRY_RUN=True — change to False and run again to delete."
+    print "DRY_RUN=True - change to False and run again to delete."
 else:
     for t in victims:
         t.deleteItem()
