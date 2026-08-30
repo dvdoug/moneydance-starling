@@ -4,9 +4,9 @@ Instructions for AI coding agents working in this repository. Humans should star
 
 ## Current state (read this first)
 
-Shipped as **`module_build` 9** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.md](CHANGELOG.md) must stay in lockstep). First public build of the Starling importer.
+Shipped as **`module_build` 10** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.md](CHANGELOG.md) must stay in lockstep). First public build of the Starling importer.
 
-**Import path (do not regress):** write `OnlineTxn`s onto `account.getDownloadedTxns()`, then `MoneydanceGUI.showDownloadedTxns(account)` (`OnlineManager.processDownloadedTxns`). That is Moneydance’s OFX Confirm / Merge path (`ol.orig-txn`, blue dots). **Do not create `ParentTxn`s for ordinary merchants.** Exception: a movement between a mapped current-account MAIN and a mapped Space is **one** `ParentTxn` on the current account with a `SplitTxn` on the other mapped bank account (`setIsNew(false)` so it shows in the register — not the download pane). Moneydance’s download converter only splits `OnlineTxn`s to income/expense categories, so OFX cannot form that transfer. If a unique existing transfer matches date, amount, and other account, tag its FITID instead of adding a row. Space-side `ON_US_PAY_ME` + `CUSTOMER` is skipped when the other Starling account MAIN is mapped. Do not special-case the name “Personal”; joint and business current accounts use the same MAIN + counterpart rule.
+**Import path (do not regress):** write `OnlineTxn`s onto `account.getDownloadedTxns()`, then `MoneydanceGUI.showDownloadedTxns(account)` (`OnlineManager.processDownloadedTxns`). That is Moneydance’s OFX Confirm / Merge path (`ol.orig-txn`, blue dots). **Do not create `ParentTxn`s.** Staging is always `OnlineTxn` + `showDownloadedTxns` (Moneydance auto-adds on the EDT). After that auto-add, for a mapped current-account ↔ Space movement, retarget the unconfirmed split to the other mapped bank account so both registers show one transfer. If a unique existing transfer matches date, amount, and other account, tag its FITID instead of adding a row. Space-side `ON_US_PAY_ME` + `CUSTOMER` is skipped when the other Starling account MAIN is mapped. Do not special-case the name “Personal”; joint and business current accounts use the same MAIN + counterpart rule.
 
 **What works now**
 
@@ -55,10 +55,10 @@ Do not rename the extension ID after the first public build. Infinite Kind treat
 ## Hard rules
 
 - **Never hardcode a PAT or any credential.** Tokens come from the extension Settings UI and are stored in the open data file (`LocalStorage.put` + `cacheAuthentication`). Never delete the put-copy after a cache write.
-- **Starling signed cashflow goes on `OnlineTxn.setAmount` for ordinary merchants.** Convert `minorUnits` + `direction` (`OUT` negative) at the API boundary. Moneydance’s download converter owns register signs. Do not flip amounts. Mapped current-account ↔ Space movements are a `ParentTxn` + split, not an `OnlineTxn`.
+- **Starling signed cashflow goes on `OnlineTxn.setAmount`.** Convert `minorUnits` + `direction` (`OUT` negative) at the API boundary. Moneydance’s download converter owns register signs. Do not flip amounts. After auto-add, retarget unconfirmed Space-movement splits to the mapped counterpart bank account.
 - **Personal access only** (`https://api.starlingbank.com/api/v2`, `Authorization: Bearer`). Do not add TPP OAuth, payments, or message signing. See [docs/starling-api.md](docs/starling-api.md).
 - **Never log the PAT**, paste it into commits, write it to `System.err` / `AppDebug`, or include it in crash reports. Mask it in the UI (`••••` plus last 4).
-- **Import through Moneydance’s download converter** for merchants. Write `OnlineTxn`s onto `account.getDownloadedTxns()`, then call `MoneydanceGUI.showDownloadedTxns(account)`. Mapped current-account ↔ Space movements are the `ParentTxn` exception in **Current state**. FITID skip is against live register `ParentTxn`s only.
+- **Import through Moneydance’s download converter.** Write `OnlineTxn`s onto `account.getDownloadedTxns()`, then call `MoneydanceGUI.showDownloadedTxns(account)`. FITID skip is against live register `ParentTxn`s only.
 - **FITIDs:** posted `starling:{categoryUid}:{feedItemUid}`; pending `starling:pending:{categoryUid}:{feedItemUid}`. Protocol `OnlineTxn.PROTO_TYPE_OFX`. Hidden flag `starling.pending` via `ParentTxn.setParameter`. Never use user Keywords for this.
 - **Pending set-reconcile only our unconfirmed pending `ParentTxn`s** (`starling:pending:` FITID, `isNew`). Remove vanished holds with `deleteItem()`. Unique pending→posted match (exact amount, merchant, date within 7 days) updates that `ParentTxn` in place. Ambiguous / amount-changed → delete the **unconfirmed** pending row and add posted. Unconfirmed pending names get a `[PENDING] ` prefix. If the user **Confirm**s or **Merge**s the pending row, we do not strip `[PENDING]` later — they merge the settled download.
 - **Honor the mapping start date as the fetch floor for this run.** After a successful import, persist `syncStartDate = max(current start, lastPostedDate − 31 days)` so From only moves **forward**.
@@ -136,7 +136,7 @@ Keep the API client free of Swing. Keep Swing free of raw JSON.
 - Entry point extends `com.moneydance.apps.md.controller.FeatureModule`.
 - `init()` runs at app start: GUI and data file may **not** exist yet. Register the feature there; open windows on `invoke()` or `md:file:opened`.
 - Package the class as `com/moneydance/modules/features/starling/Main.class` plus `meta_info.dict`.
-- **Do not create register `ParentTxn`s for ordinary merchants.** Staging is `OnlineTxn`; Moneydance’s converter creates the parent. Mapped current-account ↔ Space movements are the exception (one parent + split on the other mapped bank account). Pending promote/delete may edit or `deleteItem` unconfirmed parents we tagged. Never `syncItem()` only on a split.
+- **Do not create register `ParentTxn`s for import.** Staging is `OnlineTxn`; Moneydance’s converter creates the parent. After auto-add, we may change that unconfirmed parent’s split account so a Space movement is a transfer. Pending promote/delete may edit or `deleteItem` unconfirmed parents we tagged. Never `syncItem()` only on a split.
 - Amounts are integer minor units in Moneydance; convert via the account’s `CurrencyType`.
 - `SplitTxn.amount` is the wrong sign. Use `value` / `parentAmount` as documented by Infinite Kind.
 - `minbuild` in `meta_info.dict` is the oldest MD **application** build we support (5100+). It is not `module_build`. Missing it → “Extension version too old.”

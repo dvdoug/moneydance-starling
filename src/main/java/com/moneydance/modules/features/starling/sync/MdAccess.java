@@ -4,7 +4,6 @@ import com.infinitekind.moneydance.model.Account;
 import com.infinitekind.moneydance.model.AccountBook;
 import com.infinitekind.moneydance.model.AbstractTxn;
 import com.infinitekind.moneydance.model.CurrencyType;
-import com.infinitekind.moneydance.model.CurrencyUtil;
 import com.infinitekind.moneydance.model.OnlineTxn;
 import com.infinitekind.moneydance.model.OnlineTxnList;
 import com.infinitekind.moneydance.model.ParentTxn;
@@ -12,7 +11,6 @@ import com.infinitekind.moneydance.model.SplitTxn;
 import com.infinitekind.moneydance.model.TransactionSet;
 import com.infinitekind.moneydance.model.TxnSet;
 import com.infinitekind.moneydance.model.TxnUtil;
-import com.infinitekind.util.DateUtil;
 
 /** Java facades for Kotlin-private properties that still have public getters on the bytecode. */
 public final class MdAccess {
@@ -339,70 +337,27 @@ public final class MdAccess {
     }
 
     /**
-     * One Moneydance transfer: parent on {@code fromAccount}, split on {@code toAccount}.
-     * Both registers show the same transaction.
+     * Point an unconfirmed download's other split at {@code toAccount} so both registers
+     * show one transfer. No-op if already a transfer there, or if the row is confirmed.
      */
-    public static ParentTxn addTransfer(
-        AccountBook book,
-        Account fromAccount,
-        Account toAccount,
-        int dateInt,
-        long amount,
-        String description,
-        String memo,
-        String fitId,
-        boolean pending
-    ) {
-        String desc = description == null ? "" : description;
-        String note = memo == null ? "" : memo;
-        ParentTxn parent = ParentTxn.makeParentTxn(
-            book,
-            dateInt,
-            dateInt,
-            DateUtil.getUniqueCurrentTimeMillis(),
-            "",
-            fromAccount,
-            desc,
-            note,
-            -1L,
-            AbstractTxn.STATUS_UNRECONCILED
-        );
+    public static boolean relinkUnconfirmedSplit(ParentTxn parent, Account toAccount) {
+        if (parent == null || toAccount == null) {
+            return false;
+        }
+        if (parent.isTransferTo(toAccount)) {
+            return true;
+        }
+        if (!parent.isNew()) {
+            return false;
+        }
+        if (parent.getSplitCount() < 1) {
+            return false;
+        }
+        SplitTxn split = parent.getSplit(0);
         parent.setEditingMode();
-        double rate = CurrencyUtil.getRawRate(
-            fromAccount.getCurrencyType(),
-            toAccount.getCurrencyType(),
-            dateInt
-        );
-        SplitTxn split = SplitTxn.makeSplitTxn(
-            parent,
-            amount,
-            rate,
-            toAccount,
-            desc,
-            -1L,
-            AbstractTxn.STATUS_UNRECONCILED
-        );
-        parent.addSplit(split);
-        parent.setFiTxnId(OnlineTxn.PROTO_TYPE_OFX, fitId);
-        parent.setTransferType(AbstractTxn.TRANSFER_TYPE_BANK);
-        parent.setIsNew(false);
-        if (pending) {
-            parent.setParameter("starling.pending", true);
-        }
+        split.setAccount(toAccount);
         TxnUtil.setRatesInTxn(parent);
-        book.getTransactionSet().addNewTxn(parent);
-        return parent;
-    }
-
-    /** v8 wrote transfers as isNew without ol.orig-txn, so the register hid them. */
-    public static void revealOrphanNewTransfer(ParentTxn txn) {
-        if (txn == null || !txn.isNew()) {
-            return;
-        }
-        if (txn.getOriginalOnlineTxn() != null) {
-            return;
-        }
-        txn.setIsNew(false);
-        txn.syncItem();
+        parent.syncItem();
+        return parent.isTransferTo(toAccount);
     }
 }

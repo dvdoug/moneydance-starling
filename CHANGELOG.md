@@ -1,5 +1,9 @@
 # Changelog
 
+## 10 - 2026-08-30
+
+Space movements use the download/Confirm path again, then the other side is pointed at the mapped Space. v8–v9 wrote transfers the register never showed.
+
 ## 9 - 2026-08-30
 
 Space transfers appear in the register immediately. v8 saved them as unconfirmed without a download row, so they did not show.

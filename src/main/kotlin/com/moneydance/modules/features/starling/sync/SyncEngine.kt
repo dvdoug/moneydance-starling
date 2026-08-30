@@ -6,7 +6,9 @@ import com.infinitekind.moneydance.model.ParentTxn
 import com.moneydance.modules.features.starling.api.BankTxn
 import com.moneydance.modules.features.starling.api.MappableSource
 import com.moneydance.modules.features.starling.settings.AccountMapping
+import com.moneydance.modules.features.starling.ui.MdNotify
 import java.time.LocalDate
+import javax.swing.SwingUtilities
 
 data class AccountSyncResult(
     val postedAdded: Int = 0,
@@ -46,6 +48,7 @@ class SyncEngine(
         pruneStaleDownloads(mdAccount, known)
         val mappedIds = mappings.filter { it.moneydanceAccountUuid.isNotBlank() }.map { it.sourceId }.toSet()
         val mappingBySource = mappings.associateBy { it.sourceId }
+        val relinks = mutableListOf<Pair<String, String>>()
         val pendingLf = txns.filter { it.isPending }
         val postedLf = txns.filter { !it.isPending && it.id.isNotBlank() }
 
@@ -97,14 +100,17 @@ class SyncEngine(
             val fitId = FitIds.posted(FitIds.feedCategory(txn, source.categoryUid), txn.id)
             if (txn.id in promotedPostedIds) continue
             if (fitId in known) {
-                MdAccess.findByFitId(book, mdAccount, FitIds.PROTOCOL, fitId)?.let {
-                    MdAccess.revealOrphanNewTransfer(it)
+                MdAccess.findByFitId(book, mdAccount, FitIds.PROTOCOL, fitId)?.let { parent ->
+                    if (parent.isNew && parent.originalOnlineTxn == null) {
+                        parent.isNew = false
+                        parent.syncItem()
+                    }
                 }
                 postedSkipped++
                 latestPosted = maxDate(latestPosted, txn.date)
                 continue
             }
-            if (addPostedOrTransfer(mdAccount, source, txn, fitId, pending = false, sources, mappedIds, mappingBySource)) {
+            if (addPostedOrTransfer(mdAccount, source, txn, fitId, pending = false, sources, mappedIds, mappingBySource, relinks)) {
                 postedAdded++
             } else {
                 postedSkipped++
@@ -124,7 +130,7 @@ class SyncEngine(
                 }
                 pendingUpdated++
             } else {
-                addPostedOrTransfer(mdAccount, source, txn, key, pending = true, sources, mappedIds, mappingBySource)
+                addPostedOrTransfer(mdAccount, source, txn, key, pending = true, sources, mappedIds, mappingBySource, relinks)
                 known.add(key)
                 pendingAdded++
             }
@@ -138,6 +144,7 @@ class SyncEngine(
 
         pruneStaleDownloads(mdAccount, known)
         finishDownloads(mdAccount)
+        scheduleRelinks(mdAccount, relinks)
 
         return AccountSyncResult(
             postedAdded = postedAdded,
@@ -161,7 +168,8 @@ class SyncEngine(
         pending: Boolean,
         sources: List<MappableSource>,
         mappedIds: Set<String>,
-        mappingBySource: Map<String, AccountMapping>
+        mappingBySource: Map<String, AccountMapping>,
+        relinks: MutableList<Pair<String, String>>
     ): Boolean {
         val other = TxnRouter.transferCounterpart(txn, source, sources, mappedIds)
         val otherUuid = other?.let { mappingBySource[it.id]?.moneydanceAccountUuid }?.takeIf { it.isNotBlank() }
@@ -172,24 +180,40 @@ class SyncEngine(
             val existing = MdAccess.findUniqueTransfer(book, mdAccount, otherAccount, dateInt, amount)
             if (existing != null) {
                 MdAccess.setRegisterFitId(existing, fitId)
+                MdNotify.log("tagged existing transfer $fitId -> ${MdAccess.fullAccountName(otherAccount)}")
                 return false
             }
-            val payee = if (pending) FitIds.PENDING_LABEL + txn.payee() else txn.payee()
-            MdAccess.addTransfer(
-                book,
-                mdAccount,
-                otherAccount,
-                dateInt,
-                amount,
-                payee,
-                txn.memo(),
-                fitId,
-                pending
-            )
+            addDownloadTxn(mdAccount, txn, fitId, pending)
+            if (otherUuid != null) relinks.add(fitId to otherUuid)
             return true
         }
         addDownloadTxn(mdAccount, txn, fitId, pending)
         return true
+    }
+
+    /**
+     * [processDownloaded] queues Moneydance's auto-add on the EDT. Relink after that
+     * so the Confirm row is already in the register, then point its split at the Space.
+     */
+    private fun scheduleRelinks(mdAccount: Account, relinks: List<Pair<String, String>>) {
+        if (relinks.isEmpty()) return
+        SwingUtilities.invokeLater {
+            SwingUtilities.invokeLater {
+                for ((fitId, uuid) in relinks) {
+                    val parent = MdAccess.findByFitId(book, mdAccount, FitIds.PROTOCOL, fitId)
+                    val other = book.getAccountByUUID(uuid)
+                    if (parent == null || other == null) {
+                        MdNotify.log("could not link $fitId (download missing or account gone)")
+                        continue
+                    }
+                    if (MdAccess.relinkUnconfirmedSplit(parent, other)) {
+                        MdNotify.log("linked $fitId -> ${MdAccess.fullAccountName(other)}")
+                    } else {
+                        MdNotify.log("left $fitId as downloaded; Confirm as a transfer to ${MdAccess.fullAccountName(other)}")
+                    }
+                }
+            }
+        }
     }
 
     private fun addDownloadTxn(account: Account, txn: BankTxn, fitId: String, pending: Boolean) {
