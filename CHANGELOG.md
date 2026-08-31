@@ -1,5 +1,9 @@
 # Changelog
 
+## 16 - 2026-08-31
+
+Pending holds no longer show `[PENDING]` on the Description. When a hold settles and matches, that row gets the posted payee and memo.
+
 ## 15 - 2026-08-31
 
 Setup guide matches the Developer Portal (new account, then Connect accounts). Listing copy: Spaces, and no aggregator.

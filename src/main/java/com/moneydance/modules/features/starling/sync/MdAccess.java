@@ -273,6 +273,15 @@ public final class MdAccess {
         txn.syncItem();
     }
 
+    public static void setMemo(ParentTxn txn, String memo) {
+        txn.setMemo(memo == null ? "" : memo);
+        txn.syncItem();
+    }
+
+    public static String getMemo(ParentTxn txn) {
+        return txn.getMemo();
+    }
+
     public static String getDescription(ParentTxn txn) {
         return txn.getDescription();
     }

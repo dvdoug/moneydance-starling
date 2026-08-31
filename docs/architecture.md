@@ -69,7 +69,7 @@ Store non-secrets in `AccountBook` local storage under `starling.*`. Store each 
 Write `OnlineTxn`s into `account.getDownloadedTxns()`, then call **`MoneydanceGUI.showDownloadedTxns(account)`** so Moneydance’s own `OnlineTxnMerger` creates unconfirmed register rows (`ol.orig-txn`, Confirm, Merge Choices). That is the OFX path. Auto-add runs later on the EDT; after it, we retarget an unconfirmed Space-movement split to the mapped counterpart bank account.
 
 - **Confirm** = standalone register txn. **Merge** = combine with an existing row. Merge copies **FITID** onto the survivor; next sync skips it. Delete without confirm → it comes back.
-- Merge into a reminder keeps the **reminder’s description**. The downloaded `[PENDING]` name is discarded. A later settled download is a second merge (reminder name still wins).
+- Merge into a reminder keeps the **reminder’s description** at Confirm time. A unique pending→posted match later copies the settled payee and memo onto that same parent.
 - **Automatically Merge Downloaded Transactions** is the user’s pref; we do not force it.
 - **Cleared** follows **Mark as Cleared When Confirmed**.
 
@@ -82,13 +82,13 @@ Hidden metadata (not user Keywords):
 | `starling.pending` = `true` | `ParentTxn.setParameter` | Cheap filter |
 | `OnlineTxn.setPending(true)` | downloaded row | Staging flag |
 
-Pending set-reconcile applies to **our** `starling:pending:` register rows, including after the user confirmed the blue dot. Unique pending→posted match (exact amount, merchant, date within 7 days) updates that parent in place (posted FITID, clear `starling.pending`, drop `[PENDING] `). If it leaves pending **without** a unique match (amount changed, ambiguous, vanished): `deleteItem` that parent even if confirmed, then add posted as a download when we have one. Never delete reminder/typed rows or posted `starling:` FITIDs.
+Pending set-reconcile applies to **our** `starling:pending:` register rows, including after the user confirmed the blue dot. Unique pending→posted match (exact amount, merchant, date within 7 days) updates that parent in place (posted FITID, clear `starling.pending`, copy settled payee and memo). If it leaves pending **without** a unique match (amount changed, ambiguous, vanished): `deleteItem` that parent even if confirmed, then add posted as a download when we have one. Never delete reminder/typed rows or posted `starling:` FITIDs.
 
 ## First import window
 
 Per mapping, **sync start date** (`YYYY-MM-DD`). Default: first day of the current month. Blank = all history we can fetch **for this run** (chunked). Fetch from = min(From, lastPosted − 7 days, oldest open `starling:pending:` date − 1 day). Seven days covers late posted clearing (timezone, weekend, holiday), not card-auth life; live holds keep the window open. After a successful import, persist `syncStartDate = max(current From, lastPosted − 7)` so From only moves **forward**. A long-lived hold extends the **fetch**, not the saved From.
 
-Unconfirmed pending rows get a `[PENDING] ` **Description** prefix after `showDownloadedTxns`. `OnlineTxn.setName` and `ol.orig-payee` stay the raw merchant. Hidden FITID / `starling.pending` remain the source of truth. Description prefix is stripped on promote to posted; a leftover `[PENDING] ` on `ol.orig-payee` is stripped on our FITIDs at import.
+Pending is metadata only (`starling:pending:` FITID, `starling.pending`). Description and memo follow the live feed item (payee / reference). Leftover `[PENDING] ` on Description is overwritten when we copy feed text; leftover prefixes on `ol.orig-payee` are stripped on our FITIDs at import.
 
 Currency: if Starling `currency` differs from the Moneydance account’s `CurrencyType.idString`, skip that mapping (hard error).
 

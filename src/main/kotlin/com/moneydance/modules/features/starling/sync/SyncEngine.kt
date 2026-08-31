@@ -96,14 +96,7 @@ class SyncEngine(
             val existing = ourPending.remove(pair.pendingKey) ?: continue
             val fitId = FitIds.posted(FitIds.feedCategory(pair.posted, source.categoryUid), pair.posted.id)
             val confirmed = !MdAccess.isNew(existing)
-            MdAccess.setDescription(
-                existing,
-                FitIds.settledDescription(
-                    MdAccess.getDescription(existing).orEmpty(),
-                    pair.posted.payee(),
-                    confirmed
-                )
-            )
+            copyTxnText(existing, pair.posted)
             if (!confirmed) {
                 MdAccess.setDateInt(existing, isoToDateInt(pair.posted.date))
             }
@@ -259,7 +252,7 @@ class SyncEngine(
             SwingUtilities.invokeLater {
                 for ((key, txn) in desiredPending) {
                     val parent = MdAccess.findByFitId(book, mdAccount, FitIds.PROTOCOL, key) ?: continue
-                    labelRegisterPending(parent, txn.payee())
+                    tagRegisterPending(parent, txn)
                 }
             }
         }
@@ -297,15 +290,16 @@ class SyncEngine(
         MdAccess.downloadedUpdated(account)
     }
 
-    private fun labelRegisterPending(txn: ParentTxn, payee: String) {
-        if (!MdAccess.isNew(txn)) return
-        sanitizeOrigPayee(txn)
-        val current = MdAccess.getDescription(txn).orEmpty()
-        if (!current.startsWith(FitIds.PENDING_LABEL)) {
-            MdAccess.setDescription(txn, FitIds.withPendingLabel(current.ifBlank { payee }))
-        }
-        txn.setParameter(FitIds.PARAM_PENDING, true)
-        txn.syncItem()
+    private fun copyTxnText(parent: ParentTxn, txn: BankTxn) {
+        MdAccess.setDescription(parent, txn.payee())
+        MdAccess.setMemo(parent, txn.memo())
+    }
+
+    private fun tagRegisterPending(parent: ParentTxn, txn: BankTxn) {
+        sanitizeOrigPayee(parent)
+        copyTxnText(parent, txn)
+        parent.setParameter(FitIds.PARAM_PENDING, true)
+        parent.syncItem()
     }
 
     private fun sanitizeOrigPayee(txn: ParentTxn) {

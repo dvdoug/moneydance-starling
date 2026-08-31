@@ -30,13 +30,6 @@ object FitIds {
         return v.startsWith(PREFIX_PENDING)
     }
 
+    /** Repair leftover prefixes from older builds; matching still ignores them. */
     fun stripPendingLabel(text: String): String = text.removePrefix(PENDING_LABEL)
-
-    fun withPendingLabel(text: String): String = PENDING_LABEL + stripPendingLabel(text)
-
-    /** Confirmed rows keep the user's Description minus our label. Unconfirmed take the settled payee. */
-    fun settledDescription(current: String, postedPayee: String, alreadyConfirmed: Boolean): String {
-        if (!alreadyConfirmed) return postedPayee
-        return stripPendingLabel(current).ifBlank { postedPayee }
-    }
 }

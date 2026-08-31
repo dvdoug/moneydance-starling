@@ -36,7 +36,7 @@ Old rows stay put. New Imports follow the new mapping.
 
 ## Pending and Merge
 
-`[PENDING]` until it posts. Moneydance uses the UK settlement date. If you Merged the pending row into a reminder, merge the settled download too. The reminder’s name stays.
+Pending holds are unconfirmed until they post. Moneydance uses the UK settlement date. If you Merged a hold into a reminder and the posted amount is the same, a later Import updates that row. If the amount changed, you get a new download to Merge.
 
 ## Wrong register or currency
 
