@@ -31,4 +31,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Short version: JDK 21+, `gradlew starlin
 
 ## License
 
-[MIT](LICENSE), © Doug Wright. Moneydance is a trademark of The Infinite Kind. Starling Bank is a trademark of Starling Bank Limited. This extension is not affiliated with Starling Bank or The Infinite Kind.
+[MIT](LICENSE), © Doug Wright. Moneydance is a trademark of The Infinite Kind. Starling Bank is a trademark of Starling Bank Limited. The author of this extension is not affiliated with Starling Bank or The Infinite Kind.

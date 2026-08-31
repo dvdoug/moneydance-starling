@@ -8,6 +8,6 @@ The extension reads **your** Starling accounts and **Spaces** (spending and savi
 2. [Use the extension in Moneydance](moneydance.md) — install, paste the token, map accounts and Spaces, Import
 3. [If something looks wrong](troubleshooting.md)
 
-This extension is **unofficial**. Starling Bank and Moneydance are separate products; we are not affiliated with either.
+This extension is **unofficial**. Starling Bank and Moneydance are separate products; the author of this extension is not affiliated with either.
 
 If something in these pages does not match what you see, [tell us](https://github.com/dvdoug/moneydance-starling/issues).
