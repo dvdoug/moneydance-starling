@@ -20,7 +20,7 @@ The first save shows **Validating…**. On success you get a labelled row such a
 
 **Remove token** only forgets it in this Moneydance file.
 
-A joint or business Starling needs its **own** token (same ticks as [setup](setup.md)).
+A joint or business Starling needs its **own** token (same scopes as [setup](setup.md)).
 
 **Setup guide** in the window opens these pages on GitHub.
 

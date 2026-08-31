@@ -2,15 +2,15 @@
 
 ## The Developer Portal will not accept my Starling app login
 
-That is expected. The [Developer Portal](https://developer.starlingbank.com/) is a **new** account. After you sign up, use **Connect accounts** to link your existing bank account. See [setup](setup.md).
+The [Developer Portal](https://developer.starlingbank.com/) is a separate account. Sign up there, then **Connect accounts** to link your bank account. See [setup](setup.md).
 
 ## Add token says a permission is missing
 
-The message names the missing ticks (for example `space:read`). You **cannot** add boxes to that token. Create a **new** token with every required box in [setup](setup.md), then **Add token** again.
+The message names the missing scopes (for example `space:read`). You cannot add scopes to an existing token. Create a **new** token with every scope in [setup](setup.md), then **Add token** again.
 
 ## The table has accounts but few Spaces
 
-If **Add token** already succeeded, the required ticks are fine. You may have no live Spaces. Closed ones are marked **(archived)**. **Refresh accounts** updates what Starling lists as live and keeps archived rows already in the table.
+If **Add token** already succeeded, the required scopes are fine. You may have no live Spaces. Closed ones are marked **(archived)**. **Refresh accounts** updates what Starling lists as live and keeps archived rows already in the table.
 
 ## Import says up to date
 

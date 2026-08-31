@@ -10,8 +10,8 @@ sealed class StarlingException(message: String, cause: Throwable? = null) : Exce
             "Starling refused access. The token may be missing a required permission (scope)."
         } else {
             "This token is missing: ${missingScopes.joinToString(", ")}. " +
-                "Create a new token in the Starling Developer Portal (you cannot add ticks to an existing one) " +
-                "and include those permissions. The Setup guide lists every box to tick."
+                "Create a new token in the Starling Developer Portal (you cannot add scopes to an existing one) " +
+                "and include those permissions. The Setup guide lists the required scopes."
         }
     )
     class NotFound : StarlingException("Starling could not find that account or Space.")

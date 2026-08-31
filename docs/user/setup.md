@@ -1,33 +1,26 @@
-# Create a Starling token
+# Create a Starling personal access token
 
-You are not becoming a software vendor. Starling’s [Developer Portal](https://developer.starlingbank.com/) is a **separate website** from the banking app. It issues a **personal access token**: a long password so this unofficial extension can **read** your accounts and Spaces. It never sends payments. Treat the token like online banking.
+Work through this **before** you paste anything into Moneydance. Starling issues the token in the [Developer Portal](https://developer.starlingbank.com/). This unofficial extension uses it to **read** your accounts and Spaces. It never sends payments.
 
-The token stays in **your** Moneydance file. This extension talks **only** to Starling (`api.starlingbank.com`) from your computer. There is no aggregator or other company in the middle.
+The Developer Portal is a **separate** login from the Starling banking app. After you sign up, **Connect accounts** links your existing bank account so you can create a personal access token. You do not need to register an OAuth application, use the sandbox, or apply as a Marketplace provider.
 
-You need two logins:
+The token stays in your Moneydance file. The extension talks only to Starling (`api.starlingbank.com`).
 
-1. Your **Starling bank** account (the app you already use).
-2. A **Developer Portal** account (new). Those are not the same sign-in. Linking them is a one-off step Starling calls **Connect accounts**.
+## 1. Sign up for the Developer Portal
 
-Skip anything about registering an OAuth app, the sandbox, or becoming a Marketplace provider. Personal access is enough.
+Open [developer.starlingbank.com](https://developer.starlingbank.com/) and create an account.
 
-## 1. Create a Developer Portal account
+## 2. Connect accounts
 
-Open [developer.starlingbank.com](https://developer.starlingbank.com/) and **sign up**. Use an email and password for the portal — not “log in with the Starling app”.
+Use **Connect accounts** and complete Starling’s approval. Until this is done, you cannot create a personal access token for your live account.
 
-## 2. Connect your bank account
+## 3. Create a token
 
-Once you are in the portal, **Connect accounts** and follow Starling’s prompts (they will ask you to approve access to the bank account you already have). That is the only reason linking exists: the portal login does not know which customer account is yours until you connect it.
-
-When it has worked, you can create tokens for **your** data.
-
-## 3. Create a personal access token
-
-Give it a name you will recognise, such as `Moneydance`. Tick **only** these boxes:
+Give it a name such as `Moneydance`. Enable only these **scopes**:
 
 **Read Financial**
 
-- `space:read` — lists Spaces (spending Spaces and savings Spaces). This extension supports both, including nested Spaces on Easy Saver.
+- `space:read`
 - `transaction:read`
 
 **Read Personal**
@@ -38,17 +31,15 @@ Give it a name you will recognise, such as `Moneydance`. Tick **only** these box
 - `account-holder-type:read`
 - `customer:read`
 
-Leave **Edit Financial**, **Transact Financial**, and **Edit Personal** entirely off. Leave `card:read` off.
+Leave **Edit Financial**, **Transact Financial**, and **Edit Personal** off. Leave `card:read` off.
 
-The token does **not** expire. Starling **cannot add ticks** to a token you already made. Wrong boxes means create a **new** token. If you miss a box, **Add token** in Moneydance will name it.
+The token does not expire. Starling cannot add scopes to an existing token. If **Add token** in Moneydance reports a missing scope, create a **new** token with every scope above.
 
-## 4. Copy the token once
+Treat the token like a password. Do not email it or put it in a screenshot.
 
-Copy it. Do not screenshot or email it. You will paste it into Moneydance next.
+## 4. Joint or business
 
-## 5. Joint or business
-
-Personal, joint, and business are separate Starling **customer** accounts. Connect the one you want, then create a token with the **same ticks**. Repeat if you have another holder.
+Personal, joint, and business are separate Starling customer accounts. Connect the one you want, then create a token with the same scopes.
 
 ## Next
 

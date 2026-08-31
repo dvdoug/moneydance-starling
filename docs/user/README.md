@@ -4,7 +4,7 @@ These pages are for people who want to import Starling into Moneydance. You do n
 
 The extension reads **your** Starling accounts and **Spaces** (spending and savings) and writes them into the Moneydance file on this computer. It talks only to Starling. Nothing else sits in the middle.
 
-1. [Create a Starling personal access token](setup.md) — Developer Portal signup, connect your bank account, tick the boxes
+1. [Create a Starling personal access token](setup.md) — Developer Portal, Connect accounts, scopes
 2. [Use the extension in Moneydance](moneydance.md) — install, paste the token, map accounts and Spaces, Import
 3. [If something looks wrong](troubleshooting.md)
 

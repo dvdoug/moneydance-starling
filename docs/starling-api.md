@@ -10,7 +10,7 @@ Do not call Payment Services, Open Banking TPP, or write/payment endpoints.
 2. Create a personal access token. Tick the scopes in [user/setup.md](user/setup.md). Starling cannot add scopes to an existing token. The token does not expire.
 3. Paste the token into Moneydance (**Add token**). We probe the endpoints and name any missing scopes.
 
-Joint / business / sole trader is a **separate** PAT (separate account holder). Same ticks.
+Joint / business / sole trader is a **separate** PAT (separate account holder). Same scopes.
 
 ## Contract we code against
 
@@ -95,7 +95,7 @@ Used to label the PAT (e.g. `Douglas Wright (Personal)`).
 | HTTP | Meaning |
 | --- | --- |
 | 401 | Invalid/revoked token. Create a new PAT. |
-| 403 `insufficient_scope` | Missing ticks. Parse `Required:` / `Granted:`. Create a **new** token. |
+| 403 `insufficient_scope` | Missing scopes. Parse `Required:` / `Granted:`. Create a **new** token. |
 | 404 | Account or Space uid gone. |
 | 429 | Rate limit. Wait; honour `Retry-After` if present. |
 

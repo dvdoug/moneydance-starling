@@ -1,5 +1,9 @@
 # Changelog
 
+## 17 - 2026-08-31
+
+Setup guide uses Starling’s own words (scopes, Connect accounts) without talking down.
+
 ## 16 - 2026-08-31
 
 Pending holds no longer show `[PENDING]` on the Description. When a hold settles and matches, that row gets the posted payee and memo.
