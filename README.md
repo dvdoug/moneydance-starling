@@ -5,7 +5,7 @@ An **unofficial** Moneydance extension by **Doug Wright**. It imports [Starling 
 **This is not a Starling Bank product.** The author is not affiliated with Starling Bank or The Infinite Kind (makers of Moneydance). You need your own Starling account and a personal access token from the [Developer Portal](https://developer.starlingbank.com/) (a **separate** login from the banking app).
 
 ```text
-Your Starling account  →  Starling personal API  →  this extension  →  Moneydance on this computer
+Your Starling account  →  Starling personal API  →  this extension  →  Moneydance on your computer
 ```
 
 There is **no third-party aggregator**. The token stays in your Moneydance file. Outbound traffic is read-only requests to Starling. The extension never sends payments.
