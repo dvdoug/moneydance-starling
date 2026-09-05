@@ -171,7 +171,6 @@ There is no headless Moneydance. GitHub Actions (`.github/workflows/ci.yml`) run
 | [docs/product.md](docs/product.md) | Why this exists, user flow |
 | [docs/architecture.md](docs/architecture.md) | Technical design |
 | [docs/starling-api.md](docs/starling-api.md) | Personal API contract we code against |
-| [docs/marketplace.md](docs/marketplace.md) | Infinite Kind listing |
 | [CHANGELOG.md](CHANGELOG.md) | Notable changes per `module_build` |
 | [SECURITY.md](SECURITY.md) | Secrets handling |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to work in the repo |
