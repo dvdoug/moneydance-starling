@@ -11,6 +11,7 @@ import com.moneydance.modules.features.starling.settings.SettingsStore
 import com.moneydance.modules.features.starling.ui.ImportStatus
 import com.moneydance.modules.features.starling.ui.MdNotify
 import java.time.LocalDate
+import java.util.concurrent.atomic.AtomicInteger
 import javax.swing.SwingWorker
 
 object SyncService {
@@ -18,25 +19,31 @@ object SyncService {
     var inFlight: Boolean = false
         private set
 
+    private val runId = AtomicInteger(0)
+
+    fun discardInFlight() {
+        runId.incrementAndGet()
+        inFlight = false
+    }
+
     fun start(
         book: AccountBook,
         settings: SettingsStore,
         gui: MoneydanceGUI,
         mappings: List<AccountMapping>,
         sources: List<MappableSource>,
-        reason: String,
         onStatus: (String) -> Unit = {},
         onBusy: (Boolean) -> Unit = {},
         onSources: (List<MappableSource>) -> Unit = {},
         onMappings: (List<AccountMapping>) -> Unit = {}
     ): Boolean {
         if (inFlight) {
-            MdNotify.log("skip $reason (already running)")
+            MdNotify.log("skip import (already running)")
             return false
         }
         val mapped = mappings.filter { it.moneydanceAccountUuid.isNotBlank() }
         if (mapped.isEmpty()) {
-            MdNotify.log("skip $reason (no mapped accounts)")
+            MdNotify.log("skip import (no mapped accounts)")
             onStatus("Choose a Moneydance account for at least one row.")
             return false
         }
@@ -45,16 +52,19 @@ object SyncService {
             onStatus("Add a personal access token first.")
             return false
         }
+        val id = runId.incrementAndGet()
         inFlight = true
         onBusy(true)
         val n = mapped.size
-        MdNotify.log("$reason started ($n mapped account${if (n == 1) "" else "s"})")
-        val startText = if (reason == "auto-import") "importing on file open" else "importing"
-        MdNotify.bar(gui, startText, 0.02)
-        onStatus(startText.replaceFirstChar { it.uppercase() } + "…")
+        MdNotify.log("import started ($n mapped account${if (n == 1) "" else "s"})")
+        MdNotify.bar(gui, "importing", 0.02)
+        onStatus("Importing…")
 
         object : SwingWorker<FetchBundle, Progress>() {
+            private fun superseded(): Boolean = id != runId.get()
+
             override fun doInBackground(): FetchBundle {
+                if (superseded()) return FetchBundle(emptyList(), emptyList())
                 val byId = sources.associateBy { it.id }
                 val today = LocalDate.now()
                 val tokenByAccount = linkedMapOf<String, String>()
@@ -72,6 +82,7 @@ object SyncService {
                 val feedsToFetch = sources.filter { TxnRouter.shouldFetch(it, sources, mappedIds) }
 
                 feedsToFetch.forEachIndexed { index, src ->
+                    if (superseded()) return FetchBundle(emptyList(), emptyList())
                     val token = tokenByAccount[src.accountUid] ?: tokens.first().second
                     val client = StarlingClient(token)
                     val mapping = TxnRouter.mappingForFetch(src, sources, mapped)
@@ -115,6 +126,7 @@ object SyncService {
             }
 
             override fun process(chunks: List<Progress>) {
+                if (superseded()) return
                 val last = chunks.last()
                 MdNotify.bar(gui, last.text, last.progress.coerceIn(0.02, 0.9))
                 onStatus(last.text.replaceFirstChar { it.uppercase() } + "…")
@@ -123,16 +135,23 @@ object SyncService {
             override fun done() {
                 try {
                     val bundle = get()
-                    applyFetched(book, settings, gui, bundle, reason, onStatus, onSources, onMappings)
+                    if (superseded()) {
+                        MdNotify.log("import discarded (file closed)")
+                        return
+                    }
+                    applyFetched(book, settings, gui, bundle, onStatus, onSources, onMappings)
                 } catch (e: Exception) {
+                    if (superseded()) return
                     val cause = e.cause ?: e
                     val msg = cause.message ?: "Import failed."
-                    MdNotify.log("$reason failed: ${cause.javaClass.simpleName}: $msg", cause)
+                    MdNotify.log("import failed: ${cause.javaClass.simpleName}: $msg", cause)
                     MdNotify.bar(gui, msg, 0.0)
                     onStatus(msg)
                 } finally {
-                    inFlight = false
-                    onBusy(false)
+                    if (id == runId.get()) {
+                        inFlight = false
+                        onBusy(false)
+                    }
                 }
             }
         }.execute()
@@ -144,7 +163,6 @@ object SyncService {
         settings: SettingsStore,
         gui: MoneydanceGUI,
         bundle: FetchBundle,
-        reason: String,
         onStatus: (String) -> Unit,
         onSources: (List<MappableSource>) -> Unit,
         onMappings: (List<AccountMapping>) -> Unit
@@ -197,9 +215,8 @@ object SyncService {
         onSources(bundle.sources)
         onMappings(updated)
         val overall = ImportStatus.overall(results)
-        val prefix = if (reason == "auto-import") "auto-import " else ""
-        MdNotify.log("$reason finished: $overall")
-        MdNotify.bar(gui, prefix + overall, 1.0)
+        MdNotify.log("import finished: $overall")
+        MdNotify.bar(gui, overall, 1.0)
         onStatus(lines.joinToString("\n"))
     }
 

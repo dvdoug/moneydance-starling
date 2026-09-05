@@ -32,6 +32,14 @@ internal fun Map<String, JsonVal>.long(key: String): Long? = this[key]?.long()
 internal fun Map<String, JsonVal>.double(key: String): Double? = this[key]?.double()
 internal fun Map<String, JsonVal>.bool(key: String): Boolean? = this[key]?.bool()
 
+internal fun JsonVal.requireObj(what: String): Map<String, JsonVal> =
+    (this as? JsonVal.Obj)?.value ?: throw StarlingException.Parse("expected $what object")
+
+internal fun Map<String, JsonVal>.requireArr(key: String): List<JsonVal> {
+    val v = this[key] ?: throw StarlingException.Parse("missing $key")
+    return (v as? JsonVal.Arr)?.value ?: throw StarlingException.Parse("$key is not an array")
+}
+
 internal fun parseJson(text: String): JsonVal = JsonReader(text).parseValue()
 
 private class JsonReader(private val s: String) {

@@ -8,7 +8,7 @@ This extension reads the user’s Starling Bank transactions and writes them int
 - The user creates it in the [Starling Developer Portal](https://developer.starlingbank.com/) and pastes it into **Extensions → Starling Bank**.
 - **Never** put a token in source, Gradle properties committed to git, `meta_info.dict`, CI logs, or issue trackers.
 - Do not echo the token in `AppDebug` / `System.err` / exception messages. Mask in the UI (`••••` plus last 4).
-- Store it in the **open Moneydance data file** (already encrypted with the file password): `LocalStorage.put("starling.pat.{id}")` plus `cacheAuthentication`. Do not use a sidecar file or logs. Do not delete the data-file copy after writing the auth cache — that cache can be empty after a restart.
+- Store it in the **open Moneydance data file** (already encrypted with the file password): `LocalStorage.put("starling.pat.{id}")`. Do not use `cacheAuthentication`, a sidecar file, or logs.
 
 If a token leaks: the user revokes it in the Developer Portal and creates a new one (Starling cannot add scopes to an existing token). Document that in Settings errors.
 

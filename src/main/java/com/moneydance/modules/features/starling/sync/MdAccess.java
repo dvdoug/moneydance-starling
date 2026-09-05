@@ -165,10 +165,6 @@ public final class MdAccess {
         txn.setDateInitiatedInt(dateInt);
     }
 
-    public static void setPending(OnlineTxn txn, boolean pending) {
-        txn.setPending(pending);
-    }
-
     public static void setIsoCurrency(OnlineTxn txn, String iso) {
         txn.setISOCurrencyCode(iso);
     }
@@ -184,12 +180,11 @@ public final class MdAccess {
         String name,
         String memo,
         String fitId,
-        boolean pending,
         String isoCurrency
     ) {
         OnlineTxnList list = account.getDownloadedTxns();
         OnlineTxn txn = newTxn(list);
-        fillDownload(txn, dateInt, amount, name, memo, fitId, pending, isoCurrency);
+        fillDownload(txn, dateInt, amount, name, memo, fitId, isoCurrency);
         setNew(txn);
         return txn;
     }
@@ -201,7 +196,6 @@ public final class MdAccess {
         String name,
         String memo,
         String fitId,
-        boolean pending,
         String isoCurrency
     ) {
         String payee = name == null ? "" : name;
@@ -213,7 +207,6 @@ public final class MdAccess {
         txn.setMemo(memo == null ? "" : memo);
         txn.setDatePostedInt(dateInt);
         txn.setDateInitiatedInt(dateInt);
-        txn.setPending(pending);
         if (isoCurrency != null && !isoCurrency.isEmpty()) {
             txn.setISOCurrencyCode(isoCurrency);
         }
@@ -263,11 +256,6 @@ public final class MdAccess {
         return left != null && left.equals(right);
     }
 
-    public static void clearPendingFlag(ParentTxn txn) {
-        txn.removeParameter("starling.pending");
-        txn.syncItem();
-    }
-
     public static void setDescription(ParentTxn txn, String description) {
         txn.setDescription(description);
         txn.syncItem();
@@ -315,6 +303,37 @@ public final class MdAccess {
     public static void setRegisterFitId(ParentTxn txn, String fitId) {
         txn.setFiTxnId(OnlineTxn.PROTO_TYPE_OFX, fitId);
         txn.syncItem();
+    }
+
+    public static void promotePending(ParentTxn txn, String description, String memo, String fitId) {
+        txn.setEditingMode();
+        txn.setDescription(description == null ? "" : description);
+        txn.setMemo(memo == null ? "" : memo);
+        txn.setFiTxnId(OnlineTxn.PROTO_TYPE_OFX, fitId);
+        txn.syncItem();
+    }
+
+    /** One-split category only. Three-arg {@code setAmount}; the two-arg form negates parent. */
+    public static boolean updatePendingParent(
+        ParentTxn parent,
+        long newParentAmount,
+        String description,
+        String memo
+    ) {
+        if (parent.getSplitCount() != 1) {
+            return false;
+        }
+        SplitTxn split = parent.getSplit(0);
+        Account dest = split.getAccount();
+        if (dest != null && !dest.getAccountType().isCategory()) {
+            return false;
+        }
+        parent.setEditingMode();
+        split.setAmount(-newParentAmount, 1.0d, newParentAmount);
+        parent.setDescription(description == null ? "" : description);
+        parent.setMemo(memo == null ? "" : memo);
+        parent.syncItem();
+        return true;
     }
 
     /**

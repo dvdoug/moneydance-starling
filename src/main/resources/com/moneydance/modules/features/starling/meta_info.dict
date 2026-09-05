@@ -3,6 +3,6 @@
   "module_name" = "Starling Bank"
   "module_desc" = "Import Starling Bank accounts and Spaces into Moneydance. Your computer talks only to Starling — no aggregator. Unofficial. Not affiliated with Starling Bank or The Infinite Kind."
   "id" = "starling"
-  "module_build" = "17"
+  "module_build" = "18"
   "minbuild" = "5100"
 }

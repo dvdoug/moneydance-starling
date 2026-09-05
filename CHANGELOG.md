@@ -1,5 +1,9 @@
 # Changelog
 
+## 18 - 2026-09-05
+
+Automatically import every 30 minutes while the file stays open. Blank From stays blank. Open holds update when the amount changes. Tokens are stored with `LocalStorage.put` only.
+
 ## 17 - 2026-08-31
 
 Setup guide uses Starling’s own words (scopes, Connect accounts) without talking down.

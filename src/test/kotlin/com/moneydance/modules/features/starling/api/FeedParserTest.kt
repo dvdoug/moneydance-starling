@@ -113,5 +113,14 @@ class FeedParserTest {
 
     private fun item(json: String): BankTxn = FeedParser.parseFeedItems("""{"feedItems":[$json]}""").single()
 
+    @Test
+    fun errorEnvelopeIsNotAnEmptyFeed() {
+        try {
+            FeedParser.parseFeedItems("""{"error":"QUERY_EXCEEDING_MAX_TIME_RANGE"}""")
+            kotlin.test.fail("expected parse error")
+        } catch (_: StarlingException.Parse) {
+        }
+    }
+
     private fun itemOrNull(json: String): BankTxn? = FeedParser.parseFeedItems("""{"feedItems":[$json]}""").singleOrNull()
 }

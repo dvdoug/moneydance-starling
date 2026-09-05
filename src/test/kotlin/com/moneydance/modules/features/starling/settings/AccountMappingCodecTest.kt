@@ -3,6 +3,7 @@ package com.moneydance.modules.features.starling.settings
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class AccountMappingCodecTest {
@@ -31,5 +32,32 @@ class AccountMappingCodecTest {
         assertEquals(emptyList(), AccountMappingCodec.fromJson(null))
         assertEquals(emptyList(), PatIndexCodec.fromJson(""))
         assertFalse(CatalogueCodec.fromJson(null).isNotEmpty())
+    }
+
+    @Test
+    fun omittedFromIsNullNotThisMonth() {
+        val mapping = AccountMapping("acc:main", "uuid")
+        assertNull(mapping.syncStartDate)
+    }
+
+    @Test
+    fun newRowGetsDefaultFromExistingKeepsBlank() {
+        val existing = AccountMapping("acc:main", "uuid", null, "2026-08-01")
+        assertNull(AccountMapping.fromDateForRow(existing))
+        assertEquals("2026-08-01", AccountMapping.fromDateForRow(existing.copy(syncStartDate = "2026-08-01")))
+        assertEquals(AccountMapping.defaultStartDate(), AccountMapping.fromDateForRow(null))
+    }
+
+    @Test
+    fun keepUnlistedPreservesSavedWhenRefreshOmitsThem() {
+        val table = listOf(AccountMapping("a", "u1", "2026-08-01"))
+        val saved = listOf(
+            AccountMapping("a", "u1", "2026-01-01", "2026-08-20"),
+            AccountMapping("b", "u2", "2026-03-01", "2026-08-15")
+        )
+        val merged = AccountMapping.keepUnlisted(table, saved, setOf("a"))
+        assertEquals(2, merged.size)
+        assertEquals("b", merged[1].sourceId)
+        assertEquals("2026-08-15", merged[1].lastPostedDate)
     }
 }

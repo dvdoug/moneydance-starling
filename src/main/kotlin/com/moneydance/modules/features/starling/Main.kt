@@ -51,6 +51,7 @@ class Main : FeatureModule() {
                 appEvent.equals("md:file:closed", ignoreCase = true) ->
                 SwingUtilities.invokeLater {
                     cancelAutoImport()
+                    SyncService.discardInFlight()
                     closeWindow()
                 }
         }
@@ -62,6 +63,7 @@ class Main : FeatureModule() {
 
     override fun unload() {
         cancelAutoImport()
+        SyncService.discardInFlight()
         closeWindow()
     }
 
@@ -82,14 +84,20 @@ class Main : FeatureModule() {
         created.onGoneAway = {
             if (window === created) window = null
         }
+        created.onAutomaticImportChanged = { enabled ->
+            if (enabled) scheduleAutoImport() else cancelAutoImport()
+        }
         window = created
         created.bringToFront()
     }
 
     private fun scheduleAutoImport() {
         cancelAutoImport()
-        val timer = Timer(1800) { runAutoImport() }
-        timer.isRepeats = false
+        val store = SettingsStore.fromBook(getContext()?.currentAccountBook) ?: return
+        if (!store.importOnOpen()) return
+        val timer = Timer(AUTO_IMPORT_REPEAT_MS) { runAutoImport() }
+        timer.initialDelay = AUTO_IMPORT_FIRST_DELAY_MS
+        timer.isRepeats = true
         openTimer = timer
         timer.start()
     }
@@ -104,14 +112,12 @@ class Main : FeatureModule() {
         val book = getContext()?.currentAccountBook ?: return
         val store = SettingsStore.fromBook(book) ?: return
         if (!store.importOnOpen()) {
-            MdNotify.log("skip auto-import (disabled for this file)")
+            cancelAutoImport()
             return
         }
-        if (store.tokens().isEmpty()) {
-            MdNotify.log("skip auto-import (no token)")
-            return
-        }
+        if (store.tokens().isEmpty()) return
         val maps = store.mappings()
+        if (maps.none { it.moneydanceAccountUuid.isNotBlank() }) return
         val sources = try {
             SourceLoader.loadActive(store.tokens(), store.catalogue()).sources
         } catch (e: Exception) {
@@ -124,7 +130,6 @@ class Main : FeatureModule() {
             gui = gui,
             mappings = maps,
             sources = sources,
-            reason = "auto-import",
             onStatus = { text -> liveWindow()?.showStatus(text) },
             onBusy = { running -> liveWindow()?.setImportBusy(running) },
             onSources = { list -> liveWindow()?.showSources(list) },
@@ -155,5 +160,8 @@ class Main : FeatureModule() {
 
         const val THIRD_PARTY_DISCLAIMER: String =
             "Unofficial extension by Doug Wright. Not affiliated with Starling Bank or The Infinite Kind."
+
+        private const val AUTO_IMPORT_FIRST_DELAY_MS: Int = 1_800
+        private const val AUTO_IMPORT_REPEAT_MS: Int = 30 * 60 * 1_000
     }
 }

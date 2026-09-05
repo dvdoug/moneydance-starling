@@ -4,16 +4,16 @@ Instructions for AI coding agents working in this repository. Humans should star
 
 ## Current state (read this first)
 
-Shipped as **`module_build` 17** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.md](CHANGELOG.md) must stay in lockstep). First public build of the Starling importer.
+Shipped as **`module_build` 18** (`Version.kt`, `meta_info.dict`, and [CHANGELOG.md](CHANGELOG.md) must stay in lockstep). First public build of the Starling importer.
 
 **Import path (do not regress):** write `OnlineTxn`s onto `account.getDownloadedTxns()`, then `MoneydanceGUI.showDownloadedTxns(account)` (`OnlineManager.processDownloadedTxns`). That is Moneydance’s OFX Confirm / Merge path (`ol.orig-txn`, blue dots). **Do not create `ParentTxn`s.** Staging is always `OnlineTxn` + `showDownloadedTxns` (Moneydance auto-adds on the EDT). After that auto-add, for a mapped current-account ↔ Space movement, retarget the unconfirmed split to the other mapped bank account so both registers show one transfer. If a unique existing transfer matches date, amount, and other account, tag its FITID instead of adding a row. Space-side `ON_US_PAY_ME` + `CUSTOMER` is skipped when the other Starling account MAIN is mapped. Do not special-case the name “Personal”; joint and business current accounts use the same MAIN + counterpart rule.
 
 **What works now**
 
-- Settings: list of personal access tokens (PATs). **Add token** validates scopes, then walks that token’s history **once** (**Validating…**). Persist tokens as `starling.pat.{id}` with **both** `LocalStorage.put` and `cacheAuthentication`. Index in `starling.pats`. Never log a token.
+- Settings: list of personal access tokens (PATs). **Add token** validates scopes, then walks that token’s history **once** (**Validating…**). Persist tokens as `starling.pat.{id}` with `LocalStorage.put` only. Index in `starling.pats`. Never log a token.
 - Catalogue: first walk records `CATEGORY` counterparties from the main feed (archived Spaces). **Refresh accounts** only hits live `/accounts` + `/spaces` and stitches onto `starling.catalogue`. Missing from live list → **(archived)**; mapping kept. Never call `/savings-goals`.
 - Mapping table: Starling account / Space → Moneydance account + **From** date. Saved as `starling.mappings`. **No Save mappings button.** Persist on **Import**, and on Close / title-bar X / Alt+F4 / Escape (`goneAway`), but only if accounts loaded this session.
-- **Import** and **import when this file opens** (checkbox, default **off**) share `SyncService`. HTTP off EDT; `showDownloadedTxns` + pending reconcile on EDT.
+- **Import** and **Automatically import** (checkbox, default **off**) share `SyncService`. First run ~1.8s after the file opens, then every 30 minutes while it stays open. HTTP off EDT; `showDownloadedTxns` + pending reconcile on EDT. File close discards in-flight apply.
 - Progress: `MoneydanceGUI.setStatus("Starling: …", progress)` and Help → Console (`starling:` via `System.err` + `AppDebug.ALL`). Never log the PAT.
 - From date: this run is `min(From in the table, lastPosted − 7 days, oldest open hold − 1 day)`. Seven days is timezone/weekend/holiday clearing, not auth life. Open holds come from register `starling:pending:` dates. Blank From **and** no last posted omits a floor (all history, chunked). After a **successful** import, persist From as `max(current From, lastPosted − 7)` so it only walks **forward** (a long-lived hold extends the **fetch**, not the saved From).
 - Posted FITID `starling:{categoryUid}:{feedItemUid}`; pending `starling:pending:…`. Skip only live register `ParentTxn` FITIDs. Pending set-reconcile **our** `starling:pending:` rows, including after Confirm.
@@ -55,13 +55,13 @@ Do not rename the extension ID after the first public build. Infinite Kind treat
 
 ## Hard rules
 
-- **Never hardcode a PAT or any credential.** Tokens come from the extension Settings UI and are stored in the open data file (`LocalStorage.put` + `cacheAuthentication`). Never delete the put-copy after a cache write.
+- **Never hardcode a PAT or any credential.** Tokens come from the extension Settings UI and are stored in the open data file with `LocalStorage.put` only.
 - **Starling signed cashflow goes on `OnlineTxn.setAmount`.** Convert `minorUnits` + `direction` (`OUT` negative) at the API boundary. Moneydance’s download converter owns register signs. Do not flip amounts. After auto-add, retarget unconfirmed Space-movement splits to the mapped counterpart bank account.
 - **Personal access only** (`https://api.starlingbank.com/api/v2`, `Authorization: Bearer`). Do not add TPP OAuth, payments, or message signing. See [docs/starling-api.md](docs/starling-api.md).
 - **Never log the PAT**, paste it into commits, write it to `System.err` / `AppDebug`, or include it in crash reports. Mask it in the UI (`••••` plus last 4).
 - **Import through Moneydance’s download converter.** Write `OnlineTxn`s onto `account.getDownloadedTxns()`, then call `MoneydanceGUI.showDownloadedTxns(account)`. FITID skip is against live register `ParentTxn`s only.
-- **FITIDs:** posted `starling:{categoryUid}:{feedItemUid}`; pending `starling:pending:{categoryUid}:{feedItemUid}`. Protocol `OnlineTxn.PROTO_TYPE_OFX`. Hidden flag `starling.pending` via `ParentTxn.setParameter`. Never use user Keywords for this.
-- **Pending set-reconcile our `starling:pending:` register rows**, including after the user confirmed the blue dot. Unique pending→posted match (exact amount, merchant, date within 7 days) updates that parent in place (posted FITID, clear `starling.pending`, copy settled payee and memo). If it leaves Starling pending **without** a unique match (amount changed, ambiguous, vanished): `deleteItem` that parent even if confirmed, then add posted as a download when we have one. Never delete reminder/typed rows or posted `starling:` FITIDs. Do **not** prefix Description or `OnlineTxn.setName` with `[PENDING]`. Leftover prefixes from older builds are overwritten when we copy feed text, and stripped from `ol.orig-payee` on our FITIDs.
+- **FITIDs:** posted `starling:{categoryUid}:{feedItemUid}`; pending `starling:pending:{categoryUid}:{feedItemUid}`. Protocol `OnlineTxn.PROTO_TYPE_OFX`. Never use user Keywords for this.
+- **Pending set-reconcile our `starling:pending:` register rows**, including after the user confirmed the blue dot. Unique pending→posted match (exact amount, merchant, date within 7 days) updates that parent in place (posted FITID, copy settled payee and memo). Same pending FITID still open with a new amount rewrites that row. If it leaves Starling pending **without** a unique match (settled amount different, ambiguous, vanished): `deleteItem` that parent even if confirmed, then add posted as a download when we have one. Never delete reminder/typed rows or posted `starling:` FITIDs. Do **not** prefix Description with `[PENDING]`. Do not set `OnlineTxn.setPending` or a `starling.pending` parameter.
 - **Honor the mapping start date as a backfill floor.** Fetch `min(From, lastPosted − 7, oldest open hold − 1)`. After success, persist `syncStartDate = max(current From, lastPosted − 7)` so From only moves **forward**. The user can type an older From to force another backfill.
 - **Chunk `transactions-between`** at 180 days. Do not request 2019–now in one call.
 - **Help button** (**Setup guide**) opens [docs/user/setup.md](docs/user/setup.md) on GitHub. Keep that guide non-technical. Do not replace it with a bundled HTML viewer.
@@ -96,7 +96,7 @@ Moneydance (JVM, Swing)
         └─ Catalogue    → first walk + live stitch
 ```
 
-Settings live **in the open `AccountBook`**. Tokens: `starling.pat.{id}` via `LocalStorage.put` and `cacheAuthentication`. Index `starling.pats`. Mappings `starling.mappings`. Catalogue `starling.catalogue`.
+Settings live **in the open `AccountBook`**. Tokens: `starling.pat.{id}` via `LocalStorage.put` only. Index `starling.pats`. Mappings `starling.mappings`. Catalogue `starling.catalogue`.
 
 HTTP client: `HttpURLConnection` from the JRE Moneydance ships (MD2024: JRE 21). No extra HTTP stack. JSON via `api/Json.kt`, not Jackson.
 
@@ -121,7 +121,7 @@ On Windows: `gradlew.bat starling`. Copy `lib/moneydance-dev.jar` and `lib/extad
 
 ```text
 src/main/kotlin/com/moneydance/modules/features/starling/
-  Main.kt                 FeatureModule; `md:file:opened` auto-import (~1.8s delay)
+  Main.kt                 FeatureModule; auto-import (~1.8s, then every 30 min)
   api/                    Starling client, feed parser, scope check, JSON
   settings/               PATs, mappings, catalogue, import-on-open
   sync/                   SyncService, SyncEngine, FITID, Catalogue, TxnRouter

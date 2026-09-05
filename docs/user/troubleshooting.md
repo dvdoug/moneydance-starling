@@ -36,7 +36,7 @@ Old rows stay put. New Imports follow the new mapping.
 
 ## Pending and Merge
 
-Pending holds are unconfirmed until they post. Moneydance uses the UK settlement date. If you Merged a hold into a reminder and the posted amount is the same, a later Import updates that row. If the amount changed, you get a new download to Merge.
+Pending holds are unconfirmed until they post. Moneydance uses the UK settlement date. If you Merged a hold into a reminder and the posted amount is the same, a later Import updates that row. If the amount on an open hold changes, that row is updated in place. If the settled amount is different, you get a new download to Merge.
 
 ## Wrong register or currency
 

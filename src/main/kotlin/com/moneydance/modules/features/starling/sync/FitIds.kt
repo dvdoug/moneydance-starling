@@ -5,12 +5,8 @@ import com.moneydance.modules.features.starling.api.BankTxn
 
 object FitIds {
     const val PROTOCOL: Int = OnlineTxn.PROTO_TYPE_OFX
-    const val PARAM_PENDING: String = "starling.pending"
     const val PREFIX_POSTED: String = "starling:"
     const val PREFIX_PENDING: String = "starling:pending:"
-    const val PENDING_LABEL: String = "[PENDING] "
-    /** Moneydance similar-payee tag. Must not include [PENDING] — the matcher is prefix-based. */
-    const val ORIG_PAYEE_TAG: String = "ol.orig-payee"
 
     fun posted(categoryUid: String, txnId: String): String = "$PREFIX_POSTED$categoryUid:$txnId"
 
@@ -29,7 +25,4 @@ object FitIds {
         val v = fitId ?: return false
         return v.startsWith(PREFIX_PENDING)
     }
-
-    /** Repair leftover prefixes from older builds; matching still ignores them. */
-    fun stripPendingLabel(text: String): String = text.removePrefix(PENDING_LABEL)
 }

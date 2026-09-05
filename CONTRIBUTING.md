@@ -25,7 +25,7 @@ Prefer a throwaway Moneydance file. The owner may also alpha the main file after
 
 Moneydance reopens the **last** file. After a throwaway session, **File → Open** the real dataset before closing if that is what they want next.
 
-The PAT goes in extension Settings only. Auto-import on file open is **off** until the user ticks **Import when this file opens**.
+The PAT goes in extension Settings only. Auto-import is **off** until the user ticks **Automatically import**.
 
 ## Installing a new build
 

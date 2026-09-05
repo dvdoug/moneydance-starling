@@ -15,12 +15,6 @@ class FitIdsTest {
         assertEquals("starling:pending:cat:fid", pending)
         assertTrue(FitIds.isOurs(posted))
         assertTrue(FitIds.isPending(pending))
-    }
-
-    @Test
-    fun leftoverPendingPrefixIsIgnoredForMatching() {
-        assertEquals("Tesco", FitIds.stripPendingLabel("Tesco"))
-        assertEquals("Tesco", FitIds.stripPendingLabel("[PENDING] Tesco"))
-        assertEquals("ol.orig-payee", FitIds.ORIG_PAYEE_TAG)
+        assertTrue(FitIds.isOurs(pending))
     }
 }

@@ -25,4 +25,20 @@ class ImportStatusTest {
             ImportStatus.line("Easy Saver", AccountSyncResult(postedAdded = 1))
         )
     }
+
+    @Test
+    fun pendingAmountUpdated() {
+        assertEquals(
+            "Personal: 1 pending hold updated.",
+            ImportStatus.line("Personal", AccountSyncResult(pendingAdjusted = 1))
+        )
+    }
+
+    @Test
+    fun overallPendingUpdated() {
+        assertEquals(
+            "1 pending hold updated",
+            ImportStatus.overall(listOf(AccountSyncResult(pendingAdjusted = 1)))
+        )
+    }
 }

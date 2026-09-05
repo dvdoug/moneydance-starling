@@ -27,7 +27,7 @@ data class CatalogueEntry(
 data class AccountMapping(
     val sourceId: String,
     val moneydanceAccountUuid: String,
-    val syncStartDate: String? = defaultStartDate(),
+    val syncStartDate: String? = null,
     val lastPostedDate: String? = null,
     val sourceName: String? = null,
     val parentName: String? = null
@@ -51,6 +51,18 @@ data class AccountMapping(
     companion object {
         fun defaultStartDate(): String =
             YearMonth.now(ZoneId.systemDefault()).atDay(1).toString()
+
+        fun fromDateForRow(existing: AccountMapping?): String? =
+            if (existing == null) defaultStartDate() else existing.syncStartDate
+
+        fun keepUnlisted(
+            fromTable: List<AccountMapping>,
+            saved: List<AccountMapping>,
+            visibleIds: Set<String>
+        ): List<AccountMapping> {
+            val kept = saved.filter { it.sourceId !in visibleIds && it.moneydanceAccountUuid.isNotBlank() }
+            return fromTable + kept
+        }
 
         fun plusDays(isoDate: String, days: Long): String =
             LocalDate.parse(isoDate).plusDays(days).toString()

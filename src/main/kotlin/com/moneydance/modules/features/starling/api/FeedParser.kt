@@ -10,8 +10,8 @@ object FeedParser {
     private val UK: ZoneId = ZoneId.of("Europe/London")
 
     fun parseFeedItems(text: String): List<BankTxn> {
-        val root = parseJson(text).obj()
-        return root["feedItems"]?.arr().orEmpty().mapNotNull { parseItem(it.obj()) }
+        val root = parseJson(text).requireObj("feed")
+        return root.requireArr("feedItems").mapNotNull { parseItem(it.obj()) }
     }
 
     internal fun parseItem(o: Map<String, JsonVal>): BankTxn? {
@@ -50,8 +50,8 @@ object FeedParser {
     }
 
     fun parseAccounts(text: String): List<StarlingAccount> {
-        val root = parseJson(text).obj()
-        return root["accounts"]?.arr().orEmpty().mapNotNull { row ->
+        val root = parseJson(text).requireObj("accounts list")
+        return root.requireArr("accounts").mapNotNull { row ->
             val o = row.obj()
             val uid = o.str("accountUid")?.trim()?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
             val cat = o.str("defaultCategory")?.trim()?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null

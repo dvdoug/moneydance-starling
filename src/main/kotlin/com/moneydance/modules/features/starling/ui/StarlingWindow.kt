@@ -40,7 +40,8 @@ class StarlingWindow(
     private val mdGUI: MoneydanceGUI,
     private val book: AccountBook?,
     private val settings: SettingsStore?,
-    var onGoneAway: (() -> Unit)? = null
+    var onGoneAway: (() -> Unit)? = null,
+    var onAutomaticImportChanged: ((Boolean) -> Unit)? = null
 ) : SecondaryDialog(mdGUI, mdGUI.getTopLevelFrame(), "Starling Bank", false) {
 
     private val tokenField = JPasswordField()
@@ -64,7 +65,7 @@ class StarlingWindow(
     private val addButton = JButton("Add token")
     private val removeButton = JButton("Remove token")
     private val syncButton = JButton("Import")
-    private val importOnOpenBox = JCheckBox("Import when this file opens")
+    private val importOnOpenBox = JCheckBox("Automatically import")
     private var busy = false
     private var sources: List<MappableSource> = emptyList()
 
@@ -91,7 +92,7 @@ class StarlingWindow(
         importOnOpenBox.addActionListener {
             val on = importOnOpenBox.isSelected
             settings?.setImportOnOpen(on)
-            MdNotify.log(if (on) "import on file open enabled" else "import on file open disabled")
+            onAutomaticImportChanged?.invoke(on)
         }
 
         setBusyButtons(true)
@@ -283,7 +284,12 @@ class StarlingWindow(
     }
 
     private fun saveMappings(okMessage: String?): List<AccountMapping> {
-        val maps = mappingPanel.collectMappings()
+        val fromTable = mappingPanel.collectMappings()
+        val maps = AccountMapping.keepUnlisted(
+            fromTable,
+            settings?.mappings().orEmpty(),
+            sources.map { it.id }.toSet()
+        )
         settings?.setMappings(maps)
         mappingPanel.setSavedMappings(maps)
         if (okMessage != null) setStatus(okMessage)
@@ -343,6 +349,7 @@ class StarlingWindow(
             setStatus("Open a data file to import.")
             return
         }
+        persistTypedTokenIfAny()
         if (store.tokens().isEmpty()) {
             setStatus("Add a personal access token first.")
             return
@@ -355,7 +362,6 @@ class StarlingWindow(
             gui = mdGUI,
             mappings = maps,
             sources = current,
-            reason = "import",
             onStatus = { showStatus(it) },
             onBusy = { setImportBusy(it) },
             onSources = { showSources(it) },
@@ -370,6 +376,15 @@ class StarlingWindow(
     fun setImportBusy(running: Boolean) {
         busy = running
         setBusyButtons(!running)
+    }
+
+    private fun persistTypedTokenIfAny() {
+        val store = settings ?: return
+        val typed = typedToken()
+        if (typed.isEmpty()) return
+        store.setPat(PatIndexCodec.newId(), typed, "Personal access token", historyWalked = false)
+        tokenField.text = ""
+        reloadPatList()
     }
 
     fun showSavedMappings(mappings: List<AccountMapping>) {

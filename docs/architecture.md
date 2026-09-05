@@ -58,11 +58,11 @@ Per **data file**, not per machine:
 - Account mappings (`sourceId` → Moneydance account UUID)
 - Per-mapping `syncStartDate`, `lastPostedDate`
 - Space catalogue (`starling.catalogue`)
-- Auto-import on file open (`starling.importOnOpen`, default off)
+- Auto-import (`starling.importOnOpen`, default off): shortly after the file opens, then every 30 minutes while it stays open
 
 Cleared status follows Moneydance **Mark Transactions as Cleared When Confirmed**, not our import code.
 
-Store non-secrets in `AccountBook` local storage under `starling.*`. Store each PAT in the same encrypted data file via `LocalStorage.put` and `cacheAuthentication`. Do not delete the put-copy after a cache write. Never a sidecar file or logs. UI: PAT list, Add token, Remove token, Refresh accounts. Mappings persist on Import and on window close (X / Alt+F4 / Escape / Close), not a dedicated Save mappings button.
+Store non-secrets in `AccountBook` local storage under `starling.*`. Store each PAT in the same encrypted data file via `LocalStorage.put` only. Never a sidecar file or logs. UI: PAT list, Add token, Remove token, Refresh accounts. Mappings persist on Import and on window close (X / Alt+F4 / Escape / Close), not a dedicated Save mappings button.
 
 ## Decision: import through downloaded transactions
 
@@ -79,16 +79,14 @@ Hidden metadata (not user Keywords):
 | --- | --- | --- |
 | FITID `starling:{categoryUid}:{feedItemUid}` | `OnlineTxn.setFITxnId` / `AbstractTxn.setFiTxnId(PROTO_TYPE_OFX, …)` | Posted identity; skip + merge |
 | FITID `starling:pending:{categoryUid}:{feedItemUid}` | same | Pending identity |
-| `starling.pending` = `true` | `ParentTxn.setParameter` | Cheap filter |
-| `OnlineTxn.setPending(true)` | downloaded row | Staging flag |
 
-Pending set-reconcile applies to **our** `starling:pending:` register rows, including after the user confirmed the blue dot. Unique pending→posted match (exact amount, merchant, date within 7 days) updates that parent in place (posted FITID, clear `starling.pending`, copy settled payee and memo). If it leaves pending **without** a unique match (amount changed, ambiguous, vanished): `deleteItem` that parent even if confirmed, then add posted as a download when we have one. Never delete reminder/typed rows or posted `starling:` FITIDs.
+Pending set-reconcile applies to **our** `starling:pending:` register rows, including after the user confirmed the blue dot. Unique pending→posted match (exact amount, merchant, date within 7 days) updates that parent in place (posted FITID, copy settled payee and memo). Same pending FITID still open with a new amount rewrites that row. If it leaves pending **without** a unique match (settled amount different, ambiguous, vanished): `deleteItem` that parent even if confirmed, then add posted as a download when we have one. Never delete reminder/typed rows or posted `starling:` FITIDs.
 
 ## First import window
 
 Per mapping, **sync start date** (`YYYY-MM-DD`). Default: first day of the current month. Blank = all history we can fetch **for this run** (chunked). Fetch from = min(From, lastPosted − 7 days, oldest open `starling:pending:` date − 1 day). Seven days covers late posted clearing (timezone, weekend, holiday), not card-auth life; live holds keep the window open. After a successful import, persist `syncStartDate = max(current From, lastPosted − 7)` so From only moves **forward**. A long-lived hold extends the **fetch**, not the saved From.
 
-Pending is metadata only (`starling:pending:` FITID, `starling.pending`). Description and memo follow the live feed item (payee / reference). Leftover `[PENDING] ` on Description is overwritten when we copy feed text; leftover prefixes on `ol.orig-payee` are stripped on our FITIDs at import.
+Pending is the `starling:pending:` FITID. Description and memo follow the live feed item when we rewrite an open hold or settle a unique match.
 
 Currency: if Starling `currency` differs from the Moneydance account’s `CurrencyType.idString`, skip that mapping (hard error).
 
