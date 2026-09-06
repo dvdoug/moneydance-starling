@@ -1,5 +1,9 @@
 # Changelog
 
+## 19 - 2026-09-06
+
+Fetch 31 days past today so Starling `UPCOMING` credits and Direct Debits are imported before they settle.
+
 ## 18 - 2026-09-05
 
 Automatically import every 30 minutes while the file stays open. Blank From stays blank. Open holds update when the amount changes. Tokens are stored with `LocalStorage.put` only.

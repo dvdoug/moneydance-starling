@@ -1,5 +1,6 @@
 package com.moneydance.modules.features.starling.sync
 
+import com.moneydance.modules.features.starling.api.DateChunks
 import com.moneydance.modules.features.starling.api.HolderInfo
 import com.moneydance.modules.features.starling.api.MappableSource
 import com.moneydance.modules.features.starling.api.StarlingClient
@@ -80,7 +81,7 @@ object SourceLoader {
                 acc.accountUid,
                 acc.defaultCategory,
                 created,
-                today
+                DateChunks.fetchUntil(today)
             ) { chunk, total ->
                 val base = 0.3 + 0.6 * accIndex / accounts.size.coerceAtLeast(1)
                 val span = 0.6 / accounts.size.coerceAtLeast(1)

@@ -51,7 +51,7 @@ New rows appear as **unconfirmed downloads** (a solid blue dot), the same Confir
 - **Confirm** keeps the new row.
 - **Merge** combines it with a matching row you already typed (for example a reminder). Merge keeps the **existing** description.
 
-Pending card holds and upcoming Direct Debits appear as unconfirmed (blue-dot) rows. You can Confirm them while they are still a hold. When Starling posts the same amount, a later Import updates that row (payee and memo from the settled transaction). If the amount on an **open** hold changes, Import updates that same row. If the settled amount is different, Import removes the hold and brings in the posted amount as a new download. The Starling app often keeps the tap time; Moneydance uses the UK **settlement** date so it lines up with a statement.
+Pending card holds and upcoming Direct Debits or credits (including items Starling has dated a few weeks ahead) appear as unconfirmed (blue-dot) rows. You can Confirm them while they are still a hold. When Starling posts the same amount, a later Import updates that row (payee and memo from the settled transaction). If the amount on an **open** hold changes, Import updates that same row. If the settled amount is different, Import removes the hold and brings in the posted amount as a new download. The Starling app often keeps the tap time; Moneydance uses the UK **settlement** date so it lines up with a statement.
 
 Progress is in the bottom status bar. Detail is in **Help → Console Window** (`starling:` lines). The token is never written there.
 

@@ -32,4 +32,10 @@ class DateChunksTest {
         val d = LocalDate.of(2026, 1, 1)
         assertEquals(listOf(d to d), DateChunks.windows(d, d))
     }
+
+    @Test
+    fun fetchUntilIncludesUpcomingPastToday() {
+        val today = LocalDate.of(2026, 9, 6)
+        assertEquals(LocalDate.of(2026, 10, 7), DateChunks.fetchUntil(today))
+    }
 }

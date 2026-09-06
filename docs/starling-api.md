@@ -61,7 +61,7 @@ Scope: `space:read`. Archived Spaces are **not** listed. We discover them from `
 
 ### `GET /feed/account/{accountUid}/category/{categoryUid}/transactions-between`
 
-Query: `minTransactionTimestamp`, `maxTransactionTimestamp` (ISO instants). Both required.
+Query: `minTransactionTimestamp`, `maxTransactionTimestamp` (ISO instants). Both required. `max` is today + 31 days so `UPCOMING` items with a future `transactionTime` are included.
 
 A window longer than about **180 days** returns `400` `QUERY_EXCEEDING_MAX_TIME_RANGE`. Chunk.
 

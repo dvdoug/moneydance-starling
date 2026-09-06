@@ -197,7 +197,12 @@ class StarlingClient(
 
 object DateChunks {
     const val MAX_DAYS: Long = 180
+    /** Starling `UPCOMING` rows use a future `transactionTime`; fetch past today. */
+    const val UPCOMING_LOOKAHEAD_DAYS: Long = 31
     val EARLIEST: LocalDate = LocalDate.of(2014, 1, 1)
+
+    fun fetchUntil(today: LocalDate = LocalDate.now()): LocalDate =
+        today.plusDays(UPCOMING_LOOKAHEAD_DAYS)
 
     fun notBeforeOpened(requested: LocalDate, createdAt: String?): LocalDate {
         val opened = createdAt?.take(10)?.let {

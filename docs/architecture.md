@@ -104,7 +104,7 @@ Catalogue: first PAT save walks the main category from `createdAt` in 180-day ch
 ## Sync algorithm
 
 1. HTTP off the EDT (`SyncService` / `SwingWorker`). Apply download-list writes and `showDownloadedTxns` on the EDT.
-2. For each relevant category, `GET .../transactions-between` in 180-day windows (`to` = today; `from` = min of mapping start, last posted − 7, oldest open hold − 1).
+2. For each relevant category, `GET .../transactions-between` in 180-day windows (`to` = today + 31 days so `UPCOMING` rows with a future `transactionTime` are included; `from` = min of mapping start, last posted − 7, oldest open hold − 1).
 3. Route each item; skip FITIDs still on **live register** `ParentTxn`s on the destination account. Prune download-list rows whose FITID is already on the register.
 4. Posted: skip if FITID known; else `downloaded.newTxn()`, fill, `STATUS_NEW`.
 5. Pending (`PENDING`, `UPCOMING`, `RETRYING`): set-reconcile; promote or remove as above; else add a NEW download.

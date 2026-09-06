@@ -3,6 +3,7 @@ package com.moneydance.modules.features.starling.sync
 import com.infinitekind.moneydance.model.AccountBook
 import com.moneydance.apps.md.view.gui.MoneydanceGUI
 import com.moneydance.modules.features.starling.api.BankTxn
+import com.moneydance.modules.features.starling.api.DateChunks
 import com.moneydance.modules.features.starling.api.MappableSource
 import com.moneydance.modules.features.starling.api.StarlingClient
 import com.moneydance.modules.features.starling.api.StarlingException
@@ -67,6 +68,7 @@ object SyncService {
                 if (superseded()) return FetchBundle(emptyList(), emptyList())
                 val byId = sources.associateBy { it.id }
                 val today = LocalDate.now()
+                val until = DateChunks.fetchUntil(today)
                 val tokenByAccount = linkedMapOf<String, String>()
                 for ((_, token) in tokens) {
                     val client = StarlingClient(token)
@@ -103,7 +105,7 @@ object SyncService {
                     )
                     publish(Progress("fetching ${src.name}", (index + 0.35) / feedsToFetch.size.coerceAtLeast(1)))
                     try {
-                        val txns = client.transactionsBetween(src.accountUid, src.categoryUid, from, today)
+                        val txns = client.transactionsBetween(src.accountUid, src.categoryUid, from, until)
                         for (txn in txns) {
                             val dest = TxnRouter.destination(txn, src, sources, mappedIds)
                                 ?: continue
