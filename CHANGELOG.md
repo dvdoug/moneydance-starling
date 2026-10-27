@@ -1,5 +1,9 @@
 # Changelog
 
+## 21 - 2026-10-27
+
+Merging a payment after it has settled keeps that settled payment. The merge was still carrying yesterday's upcoming id.
+
 ## 20 - 2026-10-27
 
 Settling an upcoming credit keeps a reminder you already merged, including its category splits.

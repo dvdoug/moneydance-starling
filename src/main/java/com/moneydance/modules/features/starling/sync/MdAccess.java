@@ -313,8 +313,31 @@ public final class MdAccess {
         txn.setEditingMode();
         txn.setDescription(description == null ? "" : description);
         txn.setMemo(memo == null ? "" : memo);
+        settleFitId(txn, fitId);
+    }
+
+    /** Posted id on the register and on the original download snapshot Merge will copy. */
+    public static void settleFitId(ParentTxn txn, String fitId) {
         txn.setFiTxnId(OnlineTxn.PROTO_TYPE_OFX, fitId);
+        rewriteOriginalDownloadId(txn, fitId);
         txn.syncItem();
+    }
+
+    /**
+     * Merge copies the id from the original download snapshot ({@code ol.orig-txn}),
+     * not the register id. Settlement must update that snapshot or Merge puts the
+     * upcoming id back onto the reminder.
+     */
+    public static void rewriteOriginalDownloadId(ParentTxn txn, String fitId) {
+        if (fitId == null || fitId.isEmpty()) {
+            return;
+        }
+        OnlineTxn orig = txn.getOriginalOnlineTxn();
+        if (orig == null || fitId.equals(orig.getFITxnId())) {
+            return;
+        }
+        orig.setFITxnId(fitId);
+        txn.setOriginalOnlineTxn(orig);
     }
 
     /** One-split category only. Three-arg {@code setAmount}; the two-arg form negates parent. */

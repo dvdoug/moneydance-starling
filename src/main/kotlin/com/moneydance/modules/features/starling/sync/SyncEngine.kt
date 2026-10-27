@@ -98,7 +98,7 @@ class SyncEngine(
             val fitId = FitIds.posted(FitIds.feedCategory(pair.posted, source.categoryUid), pair.posted.id)
             val confirmed = !MdAccess.isNew(existing)
             if (pair.keepRegisterText) {
-                MdAccess.setRegisterFitId(existing, fitId)
+                MdAccess.settleFitId(existing, fitId)
                 MdNotify.log("settled ${pair.pendingKey} kept register description -> $fitId")
             } else {
                 MdAccess.promotePending(existing, pair.posted.payee(), pair.posted.memo(), fitId)
