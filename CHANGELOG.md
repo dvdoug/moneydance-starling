@@ -1,5 +1,9 @@
 # Changelog
 
+## 20 - 2026-10-27
+
+Settling an upcoming credit keeps a reminder you already merged, including its category splits.
+
 ## 19 - 2026-09-06
 
 Fetch 31 days past today so Starling `UPCOMING` credits and Direct Debits are imported before they settle.

@@ -244,6 +244,10 @@ public final class MdAccess {
         return txn.isNew();
     }
 
+    public static int splitCount(ParentTxn txn) {
+        return txn.getSplitCount();
+    }
+
     public static boolean sameAccount(Account a, Account b) {
         if (a == b) {
             return true;

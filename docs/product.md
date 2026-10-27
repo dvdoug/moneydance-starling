@@ -16,7 +16,7 @@ Ship an unofficial Moneydance extension, authored by **Doug Wright**, that is **
 - User pastes one or more **personal access tokens (PATs)** in Settings (never hardcoded).
 - User maps Starling accounts and Spaces to Moneydance accounts.
 - User imports (manually, and optionally automatically while the file stays open).
-- **Posted** transactions import once (FITID) via Moneydance’s download converter. **Pending** authorisations and **upcoming** Direct Debits appear as unconfirmed rows (blue dot), with no extra Description prefix. If a dropped pending uniquely matches a new posted row on date, merchant, and exact amount, **update that row in place** (settled payee and memo). Otherwise delete our pending parent and add a new posted **download**.
+- **Posted** transactions import once (FITID) via Moneydance’s download converter. **Pending** authorisations and **upcoming** Direct Debits or credits appear as unconfirmed rows (blue dot), with no extra Description prefix. When that feed item settles, **update the same row in place**. A plain unconfirmed hold takes the settled payee and memo. A reminder the user already merged keeps its description and splits. If the amount changed, or the match is ambiguous, delete our pending parent and add a new posted **download**.
 - Quality is high enough to list in the Moneydance extension directory.
 
 ## What this is not

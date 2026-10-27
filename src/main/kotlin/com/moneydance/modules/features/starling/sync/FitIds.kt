@@ -25,4 +25,13 @@ object FitIds {
         val v = fitId ?: return false
         return v.startsWith(PREFIX_PENDING)
     }
+
+    /** Feed item uid embedded in `starling:pending:{categoryUid}:{feedItemUid}`. */
+    fun pendingFeedItemId(fitId: String?): String? {
+        if (!isPending(fitId)) return null
+        val rest = fitId!!.removePrefix(PREFIX_PENDING)
+        val splitAt = rest.indexOf(':')
+        if (splitAt <= 0 || splitAt >= rest.length - 1) return null
+        return rest.substring(splitAt + 1)
+    }
 }

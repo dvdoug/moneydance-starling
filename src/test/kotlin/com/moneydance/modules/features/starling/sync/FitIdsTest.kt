@@ -16,5 +16,7 @@ class FitIdsTest {
         assertTrue(FitIds.isOurs(posted))
         assertTrue(FitIds.isPending(pending))
         assertTrue(FitIds.isOurs(pending))
+        assertEquals("fid", FitIds.pendingFeedItemId(pending))
+        assertEquals(null, FitIds.pendingFeedItemId(posted))
     }
 }

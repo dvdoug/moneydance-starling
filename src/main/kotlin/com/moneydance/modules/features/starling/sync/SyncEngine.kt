@@ -73,9 +73,12 @@ class SyncEngine(
         val newPosted = postedLf.filter {
             FitIds.posted(FitIds.feedCategory(it, source.categoryUid), it.id) !in known
         }
-        val dropped = ourPending.filterKeys { it !in desiredPending }.mapNotNull { (key, parent) ->
-            val snap = snapshotFromParent(mdAccount, parent) ?: return@mapNotNull null
-            key to snap
+        val dropped = ourPending.filterKeys { it !in desiredPending }.map { (key, parent) ->
+            OpenHold(
+                key = key,
+                txn = snapshotFromParent(mdAccount, parent, FitIds.pendingFeedItemId(key).orEmpty()),
+                userOwned = !MdAccess.isNew(parent) || MdAccess.splitCount(parent) != 1
+            )
         }
         val promotions = PendingMatch.uniquePairs(dropped, newPosted)
         val promotedPostedIds = promotions.map { it.posted.id }.toSet()
@@ -94,9 +97,14 @@ class SyncEngine(
             val existing = ourPending.remove(pair.pendingKey) ?: continue
             val fitId = FitIds.posted(FitIds.feedCategory(pair.posted, source.categoryUid), pair.posted.id)
             val confirmed = !MdAccess.isNew(existing)
-            MdAccess.promotePending(existing, pair.posted.payee(), pair.posted.memo(), fitId)
-            if (!confirmed) {
-                MdAccess.setDateInt(existing, isoToDateInt(pair.posted.date))
+            if (pair.keepRegisterText) {
+                MdAccess.setRegisterFitId(existing, fitId)
+                MdNotify.log("settled ${pair.pendingKey} kept register description -> $fitId")
+            } else {
+                MdAccess.promotePending(existing, pair.posted.payee(), pair.posted.memo(), fitId)
+                if (!confirmed) {
+                    MdAccess.setDateInt(existing, isoToDateInt(pair.posted.date))
+                }
             }
             known.add(fitId)
             pendingPromoted++
@@ -278,10 +286,10 @@ class SyncEngine(
         return ids
     }
 
-    private fun snapshotFromParent(mdAccount: Account, parent: ParentTxn): BankTxn? {
+    private fun snapshotFromParent(mdAccount: Account, parent: ParentTxn, feedItemId: String): BankTxn {
         val desc = MdAccess.getDescription(parent).orEmpty().trim()
         return BankTxn(
-            id = "",
+            id = feedItemId,
             categoryUid = "",
             amount = MdAccess.toMajorUnits(mdAccount, MdAccess.getValue(parent)),
             currency = MdAccess.currencyId(mdAccount),
